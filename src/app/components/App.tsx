@@ -21,6 +21,7 @@ export default function App() {
     screenSaver: false,
     particleRefresh: false,
     keepScreenOn: false,
+    cherryBlossom: false,
   });
 
   // ── 픽셀 시프트 ──────────────────────────────────────────────
@@ -236,6 +237,7 @@ export default function App() {
                   subFontFamily={settings.subFontFamily}
                   showAmPm={showAmPm}
                   showSeconds={showSeconds}
+                  cherryBlossom={settings.cherryBlossom}
                   onToggleAmPm={() => setShowAmPm(v => !v)}
                   onToggleSeconds={() => setShowSeconds(v => !v)}
                 />

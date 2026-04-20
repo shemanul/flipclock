@@ -18,6 +18,7 @@ export interface Settings {
   screenSaver: boolean;
   particleRefresh: boolean;
   keepScreenOn: boolean;
+  cherryBlossom: boolean;  // 벚꽃 배경
 }
 
 interface SettingsScreenProps {
@@ -584,6 +585,27 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                 checked={settings.keepScreenOn}
                 onChange={() => update({ keepScreenOn: !settings.keepScreenOn })}
                 accentColor="#16a34a"
+              />
+            </div>
+
+            {/* 벚꽃 배경 */}
+            <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+              <div
+                className="mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+                style={{ backgroundColor: settings.cherryBlossom ? '#fce7f3' : '#f3f4f6' }}
+              >
+                🌸
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-xs text-gray-800">벚꽃 배경</div>
+                <div className="text-[10px] text-gray-500 mt-0.5 leading-snug">
+                  봄날 벚꽃잎이 휘날리는 애니메이션 배경
+                </div>
+              </div>
+              <Toggle
+                checked={settings.cherryBlossom}
+                onChange={() => update({ cherryBlossom: !settings.cherryBlossom })}
+                accentColor="#ec4899"
               />
             </div>
 
