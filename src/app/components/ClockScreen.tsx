@@ -51,15 +51,20 @@ export function ClockScreen({
   const minutesValue = String(minutes).padStart(2, '0');
   const secondsValue = String(seconds).padStart(2, '0');
 
-  // ── 핀치줌: 타일만 확대/축소 ──────────────────────────────────
+  // ── 핀치줌 + 두 손가락 드래그 ────────────────────────────────
   const DEFAULT_SCALE = 0.5;
   const MIN_SCALE     = 0.4;
   const MAX_SCALE     = 2.5;
 
-  const [scale, setScale]      = useState(DEFAULT_SCALE);
-  const lastScale              = useRef(DEFAULT_SCALE);
-  const pinchStartDist         = useRef<number | null>(null);
-  const pinchStartScale        = useRef(DEFAULT_SCALE);
+  const [scale, setScale]   = useState(DEFAULT_SCALE);
+  const [pos, setPos]       = useState({ x: 0, y: 0 });
+
+  const lastScale           = useRef(DEFAULT_SCALE);
+  const lastPos             = useRef({ x: 0, y: 0 });
+  const pinchStartDist      = useRef<number | null>(null);
+  const pinchStartScale     = useRef(DEFAULT_SCALE);
+  const dragStartMid        = useRef<{ x: number; y: number } | null>(null);
+  const dragStartPos        = useRef({ x: 0, y: 0 });
 
   const getDistance = (touches: React.TouchList) => {
     const dx = touches[0].clientX - touches[1].clientX;
@@ -67,38 +72,63 @@ export function ClockScreen({
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  const getMidpoint = (touches: React.TouchList) => ({
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2,
+  });
+
   const handleTilesTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       e.stopPropagation();
       pinchStartDist.current  = getDistance(e.touches);
       pinchStartScale.current = lastScale.current;
+      dragStartMid.current    = getMidpoint(e.touches);
+      dragStartPos.current    = { ...lastPos.current };
     }
   };
 
   const handleTilesTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && pinchStartDist.current !== null) {
       e.stopPropagation();
+
+      // 줌
       const dist  = getDistance(e.touches);
       const ratio = dist / pinchStartDist.current;
       const next  = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pinchStartScale.current * ratio));
       lastScale.current = next;
       setScale(next);
+
+      // 이동 (두 손가락 중점 이동량)
+      if (dragStartMid.current) {
+        const mid = getMidpoint(e.touches);
+        const dx  = mid.x - dragStartMid.current.x;
+        const dy  = mid.y - dragStartMid.current.y;
+        const newPos = {
+          x: dragStartPos.current.x + dx,
+          y: dragStartPos.current.y + dy,
+        };
+        lastPos.current = newPos;
+        setPos(newPos);
+      }
     }
   };
 
   const handleTilesTouchEnd = (e: React.TouchEvent) => {
     if (e.touches.length < 2) {
       pinchStartDist.current = null;
+      dragStartMid.current   = null;
     }
   };
 
-  // 더블탭으로 기본 크기 리셋
+  // 더블탭 → 크기·위치 모두 리셋
   const lastTap = useRef(0);
   const handleDoubleTap = () => {
     const now = Date.now();
     if (now - lastTap.current < 300) {
       lastScale.current = DEFAULT_SCALE;
+      lastPos.current   = { x: 0, y: 0 };
       setScale(DEFAULT_SCALE);
+      setPos({ x: 0, y: 0 });
     }
     lastTap.current = now;
   };
@@ -121,7 +151,7 @@ export function ClockScreen({
         onTouchCancel={handleTilesTouchEnd}
         onClick={handleDoubleTap}
         style={{
-          transform: `scale(${scale})`,
+          transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`,
           transformOrigin: 'center center',
           transition: pinchStartDist.current ? 'none' : 'transform 0.2s ease-out',
           display: 'flex',
@@ -129,7 +159,7 @@ export function ClockScreen({
           touchAction: 'none',
         }}
       >
-        {/* 시 타일 */}
+        {/* 시 타일 — 기준 크기 45vw, scale로 70% = 실질 31.5vw */}
         <div style={{ width: '45vw', aspectRatio: '1 / 1' }}>
           <FlipDigit
             value={hoursValue}
