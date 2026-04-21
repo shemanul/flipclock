@@ -16,7 +16,7 @@ export default function App() {
     backgroundImage: '',
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
     fontSize: 64,
-    subFontSize: 20,
+    subFontSize: 20,  #Fixed: 숫자(px) → TimerScreen에서 `${n}px` 로 전달
     subFontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
     screenSaver: false,
     particleRefresh: false,
