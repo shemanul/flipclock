@@ -281,7 +281,8 @@ export function ClockScreen({
             lastTap.current = 0;
           } else {
             lastTap.current = now;
-          } else if (dist >= SWIPE_MIN) {
+          }
+        } else if (dist >= SWIPE_MIN) {
           // ── 스와이프 ──
           if (absDy > absDx) {
             if (dy < 0) onSwipeUp?.();
