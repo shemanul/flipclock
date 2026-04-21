@@ -25,8 +25,6 @@ export default function App() {
   });
 
   // ── 픽셀 시프트 ──────────────────────────────────────────────
-  // screenSaver ON  → 3초마다 ±4px 이동
-  // particleRefresh ON → 8초마다 ±4px 이동 (둘 다 ON이면 3초 우선)
   const [shift, setShift] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -48,14 +46,14 @@ export default function App() {
     return () => clearInterval(id);
   }, [settings.screenSaver, settings.particleRefresh]);
 
-  // ── 파티클 (particleRefresh ON) ──────────────────────────────
+  // ── 파티클 ───────────────────────────────────────────────────
   const PARTICLE_COUNT = 50;
   const [particles] = useState(() =>
     Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
       id: i,
       duration: Math.random() * 12 + 6,
       delay: Math.random() * 5,
-      size: Math.random() < 0.5 ? 4 : 6,   // 2~3 → 4~6px
+      size: Math.random() < 0.5 ? 4 : 6,
       x1: Math.random() * 100,
       y1: Math.random() * 100,
       x2: Math.random() * 100,
@@ -65,7 +63,7 @@ export default function App() {
     }))
   );
 
-  // ── 눈꽃송이 (particleRefresh ON) ────────────────────────────
+  // ── 눈꽃송이 ─────────────────────────────────────────────────
   const SNOWFLAKE_COUNT = 30;
   const SNOWFLAKES = ['❄', '❅', '❆'];
   const [snowflakes] = useState(() =>
@@ -74,10 +72,10 @@ export default function App() {
       symbol: SNOWFLAKES[i % SNOWFLAKES.length],
       startX: Math.random() * 100,
       drift: (Math.random() - 0.5) * 8,
-      fontSize: Math.random() * 20 + 20,    // 10~26 → 20~40px
+      fontSize: Math.random() * 20 + 20,
       duration: Math.random() * 8 + 7,
       delay: Math.random() * 10,
-      opacity: Math.random() * 0.3 + 0.5,  // 0.15~0.55 → 0.5~0.8
+      opacity: Math.random() * 0.3 + 0.5,
       rotation: Math.random() * 360,
     }))
   );
@@ -152,9 +150,7 @@ export default function App() {
   };
 
   const handleSwipeEnd = useCallback(() => {
-    if (!isSwiping.current) {
-      touchEndX.current = 0; touchEndY.current = 0; return;
-    }
+    if (!isSwiping.current) { touchEndX.current = 0; touchEndY.current = 0; return; }
     const dx = touchEndX.current - touchStartX.current;
     const dy = touchEndY.current - touchStartY.current;
     const threshold = 100;
@@ -258,10 +254,9 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      {/* ── 파티클 레이어 (particleRefresh ON, 설정 화면 제외) ── */}
+      {/* ── 파티클 + 눈꽃 레이어 ── */}
       {settings.particleRefresh && !showSettings && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* 픽셀 입자 */}
           {particles.map((p) => (
             <motion.div
               key={p.id}
@@ -280,8 +275,6 @@ export default function App() {
               }}
             />
           ))}
-
-          {/* 눈꽃송이 — 위에서 아래로 떨어지며 좌우 흔들림 + 회전 */}
           {snowflakes.map((s) => (
             <motion.div
               key={`snow-${s.id}`}
