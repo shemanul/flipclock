@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flipclock-v1';
+const CACHE_NAME = 'flipclock-v2';
 
 // 캐시할 파일 목록
 const PRECACHE_URLS = [
