@@ -1,5 +1,5 @@
 import { X, Upload, Trash2, Monitor, Zap, Sun, ChevronUp, ChevronDown } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 // ─── 타입 ─────────────────────────────────────────────────────
 
@@ -136,7 +136,7 @@ function FontPicker({
   );
 }
 
-/** 숫자 크기 입력 (−/숫자/+) */
+/** 숫자 크기 입력 — 길게 누르면 계속 증감 */
 function SizeInput({
   value,
   onChange,
@@ -147,11 +147,30 @@ function SizeInput({
   min: number;
 }) {
   const clamp = (n: number) => Math.max(min, n);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startPress = (delta: number) => {
+    onChange(clamp((value || min) + delta));
+    timeoutRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        onChange((prev: number) => clamp((prev || min) + delta));
+      }, 80);
+    }, 400);
+  };
+
+  const stopPress = () => {
+    if (timeoutRef.current)  clearTimeout(timeoutRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
   return (
     <div className="flex items-center gap-1">
       <button
-        onClick={() => onChange(clamp((value || min) - 1))}
-        className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm flex items-center justify-center flex-shrink-0 transition-colors"
+        onPointerDown={() => startPress(-1)}
+        onPointerUp={stopPress}
+        onPointerLeave={stopPress}
+        className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm flex items-center justify-center flex-shrink-0 transition-colors select-none"
       >−</button>
       <div className="relative w-16">
         <input
@@ -167,8 +186,10 @@ function SizeInput({
         <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 pointer-events-none">px</span>
       </div>
       <button
-        onClick={() => onChange((value || min) + 1)}
-        className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm flex items-center justify-center flex-shrink-0 transition-colors"
+        onPointerDown={() => startPress(1)}
+        onPointerUp={stopPress}
+        onPointerLeave={stopPress}
+        className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm flex items-center justify-center flex-shrink-0 transition-colors select-none"
       >+</button>
     </div>
   );
@@ -178,9 +199,19 @@ function SizeInput({
 
 export function SettingsScreen({ onClose, settings, onSettingsChange }: SettingsScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // 색상 이력 — 최근 10개
+  const [colorHistory, setColorHistory] = useState<string[]>([]);
 
   const update = (patch: Partial<Settings>) =>
     onSettingsChange({ ...settings, ...patch });
+
+  const updateColor = (key: keyof Settings, value: string) => {
+    update({ [key]: value });
+    setColorHistory((prev) => {
+      const filtered = prev.filter((c) => c !== value);
+      return [value, ...filtered].slice(0, 10);
+    });
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -430,13 +461,68 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                     <input
                       type="color"
                       value={settings[key] as string}
-                      onChange={(e) => update({ [key]: e.target.value })}
+                      onChange={(e) => updateColor(key, e.target.value)}
                       className="w-full h-8 rounded-lg cursor-pointer border border-gray-200"
+                      list={`color-history-${key}`}
                     />
                     <span className="text-[10px] text-gray-500 text-center leading-tight">{label}</span>
                   </div>
                 ))}
               </div>
+
+              {/* 색상 이력 */}
+              {colorHistory.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-[10px] text-gray-400 mb-1">최근 사용 색상</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {colorHistory.map((color, i) => (
+                      <button
+                        key={i}
+                        title={color}
+                        onClick={() => {
+                          // 가장 마지막에 변경한 컬러 키에 적용 — 탭한 색상칩을 선택된 피커에 적용
+                          // 여기선 단순히 tileColor에 적용 (또는 사용자가 직접 색상칩 드래그)
+                        }}
+                        className="group relative"
+                      >
+                        <div
+                          className="w-6 h-6 rounded-md border border-gray-200 shadow-sm hover:scale-110 transition-transform"
+                          style={{ backgroundColor: color }}
+                        />
+                        {/* 호버시 hex값 표시 */}
+                        <span className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[9px] px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          {color}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  {/* 이력 색상을 각 키에 적용하는 버튼 */}
+                  <div className="mt-2 grid grid-cols-3 gap-1.5">
+                    {(
+                      [
+                        { label: '타일배경에 적용', key: 'tileColor' },
+                        { label: '글자색에 적용',   key: 'textColor' },
+                        { label: '배경색에 적용',   key: 'backgroundColor' },
+                      ] as { label: string; key: keyof Settings }[]
+                    ).map(({ label, key }) => (
+                      <div key={key} className="flex flex-col gap-1">
+                        <p className="text-[9px] text-gray-400 text-center">{label}</p>
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {colorHistory.slice(0, 5).map((color, i) => (
+                            <button
+                              key={i}
+                              onClick={() => updateColor(key, color)}
+                              className="w-5 h-5 rounded border border-gray-200 hover:scale-110 transition-transform"
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 배경 이미지 */}
