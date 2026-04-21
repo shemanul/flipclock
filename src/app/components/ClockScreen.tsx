@@ -14,9 +14,9 @@ interface ClockScreenProps {
   cherryBlossom: boolean;
   onToggleAmPm: () => void;
   onToggleSeconds: () => void;
-  onSwipeLeft?: () => void;   // 타이머로
-  onSwipeUp?: () => void;     // 설정 열기
-  onSwipeDown?: () => void;   // 설정 닫기
+  onSwipeLeft?: () => void;
+  onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
 }
 
 export function ClockScreen({
@@ -134,38 +134,19 @@ export function ClockScreen({
     return () => { cancelAnimationFrame(animRef.current); window.removeEventListener('resize', resize); };
   }, [cherryBlossom]);
 
-  // ── 터치 통합 처리 ────────────────────────────────────────────
-  // 상태
+  // ── 줌 & 위치 ────────────────────────────────────────────────
   const DEFAULT_SCALE = 0.5;
   const MIN_SCALE     = 0.3;
   const MAX_SCALE     = 2.5;
-  const LONG_PRESS_MS = 400;
-  const SWIPE_THRESHOLD = 80;
 
-  const [scale, setScale]       = useState(DEFAULT_SCALE);
-  const [pos, setPos]           = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
+  const [scale, setScale] = useState(DEFAULT_SCALE);
+  const [pos, setPos]     = useState({ x: 0, y: 0 });
+  const lastScale         = useRef(DEFAULT_SCALE);
+  const lastPos           = useRef({ x: 0, y: 0 });
 
-  const lastScale       = useRef(DEFAULT_SCALE);
-  const lastPos         = useRef({ x: 0, y: 0 });
-
-  // 핀치
+  // ── 타일 위 핀치줌 ───────────────────────────────────────────
   const pinchStartDist  = useRef<number | null>(null);
   const pinchStartScale = useRef(DEFAULT_SCALE);
-
-  // 길게 누르기 드래그
-  const longPressTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isLongPressed   = useRef(false);
-  const dragStartTouch  = useRef<{ x: number; y: number } | null>(null);
-  const dragStartPos    = useRef({ x: 0, y: 0 });
-
-  // 스와이프
-  const swipeStartX = useRef(0);
-  const swipeStartY = useRef(0);
-  const isSwiping   = useRef(false);
-
-  // 더블탭
-  const lastTap = useRef(0);
 
   const getDistance = (touches: React.TouchList) => {
     const dx = touches[0].clientX - touches[1].clientX;
@@ -173,160 +154,186 @@ export function ClockScreen({
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // ── 두 손가락: 핀치줌 시작 ──
+  const handleTileTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
-      if (longPressTimer.current) clearTimeout(longPressTimer.current);
-      isLongPressed.current = false;
-      setIsDragging(false);
+      e.stopPropagation();
       pinchStartDist.current  = getDistance(e.touches);
       pinchStartScale.current = lastScale.current;
-      return;
-    }
-
-    // ── 한 손가락 ──
-    if (e.touches.length === 1) {
-      const x = e.touches[0].clientX;
-      const y = e.touches[0].clientY;
-
-      // 스와이프 기록
-      swipeStartX.current = x;
-      swipeStartY.current = y;
-      isSwiping.current   = false;
-
-      // 길게 누르기 드래그 준비
-      isLongPressed.current  = false;
-      dragStartTouch.current = { x, y };
-      dragStartPos.current   = { ...lastPos.current };
-
-      longPressTimer.current = setTimeout(() => {
-        isLongPressed.current = true;
-        setIsDragging(true);
-      }, LONG_PRESS_MS);
     }
   }, []);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // ── 두 손가락: 핀치줌 ──
+  const handleTileTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2 && pinchStartDist.current !== null) {
-      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      e.stopPropagation();
       const dist  = getDistance(e.touches);
       const ratio = dist / pinchStartDist.current;
       const next  = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pinchStartScale.current * ratio));
       lastScale.current = next;
       setScale(next);
+    }
+  }, []);
+
+  const handleTileTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (e.touches.length < 2) pinchStartDist.current = null;
+
+    // 더블탭 리셋
+    const now = Date.now();
+    if (now - lastTap.current < 300) {
+      lastScale.current = DEFAULT_SCALE;
+      lastPos.current   = { x: 0, y: 0 };
+      setScale(DEFAULT_SCALE);
+      setPos({ x: 0, y: 0 });
+      lastTap.current = 0;
       return;
     }
+    lastTap.current = now;
+  }, []);
 
-    // ── 한 손가락: 길게 누르기 드래그 ──
-    if (e.touches.length === 1 && isLongPressed.current && dragStartTouch.current) {
-      const newPos = {
-        x: dragStartPos.current.x + e.touches[0].clientX - dragStartTouch.current.x,
-        y: dragStartPos.current.y + e.touches[0].clientY - dragStartTouch.current.y,
-      };
-      lastPos.current = newPos;
-      setPos(newPos);
-      return;
-    }
+  const lastTap = useRef(0);
 
-    // ── 한 손가락: 스와이프 감지 (길게 누르기 전) ──
-    if (e.touches.length === 1 && !isLongPressed.current) {
-      const dx = Math.abs(e.touches[0].clientX - swipeStartX.current);
-      const dy = Math.abs(e.touches[0].clientY - swipeStartY.current);
-      if (dx > 8 || dy > 8) {
-        // 움직임 감지 → 길게 누르기 취소
-        if (longPressTimer.current) clearTimeout(longPressTimer.current);
-        isSwiping.current = true;
+  // ── 배경 터치: 영역별 분기 ───────────────────────────────────
+  // 상단 20% → 스와이프 전용
+  // 나머지   → 이동 드래그
+  const bgTouchStart  = useRef<{ x: number; y: number; time: number } | null>(null);
+  const bgIsDrag      = useRef(false);   // true면 이동모드, false면 스와이프 대기
+  const SWIPE_ZONE    = 0.2;             // 상단 20%
+  const DRAG_THRESHOLD = 8;             // px — 이 이상 움직이면 드래그 시작
+  const SWIPE_THRESHOLD = 60;           // px — 스와이프 판정 거리
+
+  const handleBgTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const isTopZone = t.clientY < window.innerHeight * SWIPE_ZONE;
+    bgTouchStart.current = { x: t.clientX, y: t.clientY, time: Date.now() };
+    bgIsDrag.current = !isTopZone; // 상단이 아니면 드래그 모드
+  }, []);
+
+  const handleBgTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1 || !bgTouchStart.current) return;
+    const t  = e.touches[0];
+    const dx = t.clientX - bgTouchStart.current.x;
+    const dy = t.clientY - bgTouchStart.current.y;
+
+    if (bgIsDrag.current) {
+      // 이동 드래그
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > DRAG_THRESHOLD) {
+        const newPos = {
+          x: lastPos.current.x + dx,
+          y: lastPos.current.y + dy,
+        };
+        setPos(newPos);
       }
     }
   }, []);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  const handleBgTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!bgTouchStart.current) return;
+    const t  = e.changedTouches[0];
+    const dx = t.clientX - bgTouchStart.current.x;
+    const dy = t.clientY - bgTouchStart.current.y;
+    const elapsed = Date.now() - bgTouchStart.current.time;
 
-    // 핀치 종료
-    if (e.touches.length < 2) pinchStartDist.current = null;
-
-    // 드래그 종료
-    if (e.touches.length === 0) {
-      const wasLongPressed = isLongPressed.current;
-      isLongPressed.current  = false;
-      dragStartTouch.current = null;
-      setIsDragging(false);
-
-      // 드래그 중이었으면 스와이프/탭 처리 안 함
-      if (wasLongPressed) return;
-
-      // ── 더블탭 리셋 ──
-      const now = Date.now();
-      if (now - lastTap.current < 300) {
-        lastScale.current = DEFAULT_SCALE;
-        lastPos.current   = { x: 0, y: 0 };
-        setScale(DEFAULT_SCALE);
-        setPos({ x: 0, y: 0 });
-        lastTap.current = 0;
-        return;
+    if (bgIsDrag.current) {
+      // 드래그 종료 — 최종 위치 저장
+      lastPos.current = {
+        x: lastPos.current.x + dx,
+        y: lastPos.current.y + dy,
+      };
+    } else {
+      // 스와이프 판정
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      if (elapsed < 500) {
+        if (absDy > absDx && absDy > SWIPE_THRESHOLD) {
+          if (dy < 0) onSwipeUp?.();
+          else        onSwipeDown?.();
+        } else if (absDx > absDy && absDx > SWIPE_THRESHOLD) {
+          if (dx < 0) onSwipeLeft?.();
+        }
       }
-      lastTap.current = now;
-
-      // ── 스와이프 처리 ──
-      //
-      if (!isSwiping.current) return;
-      const dx = e.changedTouches[0].clientX - swipeStartX.current;
-      const dy = e.changedTouches[0].clientY - swipeStartY.current;
-
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) {
-        if (dy < 0) onSwipeUp?.();
-        else        onSwipeDown?.();
-      } else if (Math.abs(dx) > SWIPE_THRESHOLD) {
-        if (dx < 0) onSwipeLeft?.();
-      }
-      isSwiping.current = false;
     }
+    bgTouchStart.current = null;
+    bgIsDrag.current     = false;
   }, [onSwipeLeft, onSwipeUp, onSwipeDown]);
+
+  // 마우스 드래그 (블루투스 마우스 대응)
+  const mouseStart = useRef<{ x: number; y: number } | null>(null);
+
+  const handleBgMouseDown = useCallback((e: React.MouseEvent) => {
+    mouseStart.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handleBgMouseMove = useCallback((e: React.MouseEvent) => {
+    if (e.buttons !== 1 || !mouseStart.current) return;
+    const dx = e.clientX - mouseStart.current.x;
+    const dy = e.clientY - mouseStart.current.y;
+    const newPos = {
+      x: lastPos.current.x + dx,
+      y: lastPos.current.y + dy,
+    };
+    setPos(newPos);
+  }, []);
+
+  const handleBgMouseUp = useCallback((e: React.MouseEvent) => {
+    if (!mouseStart.current) return;
+    const dx = e.clientX - mouseStart.current.x;
+    const dy = e.clientY - mouseStart.current.y;
+    lastPos.current = {
+      x: lastPos.current.x + dx,
+      y: lastPos.current.y + dy,
+    };
+    mouseStart.current = null;
+  }, []);
 
   return (
     <div
-      className="w-full h-full flex items-center justify-center relative overflow-hidden"
+      className="w-full h-full relative overflow-hidden"
       style={{
         backgroundColor,
         backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        touchAction: 'none',
       }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
+      onTouchStart={handleBgTouchStart}
+      onTouchMove={handleBgTouchMove}
+      onTouchEnd={handleBgTouchEnd}
+      onMouseDown={handleBgMouseDown}
+      onMouseMove={handleBgMouseMove}
+      onMouseUp={handleBgMouseUp}
     >
       {/* 벚꽃 캔버스 */}
       {cherryBlossom && (
         <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }} />
       )}
 
-      {/* 드래그 안내 */}
-      {isDragging && (
-        <div
-          className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs text-white/80 pointer-events-none"
-          style={{ zIndex: 10, backgroundColor: 'rgba(0,0,0,0.35)' }}
-        >
-          드래그로 이동 · 더블탭으로 리셋
-        </div>
-      )}
-
-      {/* 타일 */}
+      {/* 상단 스와이프 존 표시 (디버그용 — 나중에 제거 가능) */}
       <div
+        className="absolute top-0 left-0 right-0 pointer-events-none"
+        style={{ height: '20%', zIndex: 0 }}
+      />
+
+      {/* 타일 — 화면 중앙 기준으로 이동 */}
+      <div
+        className="absolute"
         style={{
-          transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`,
+          top: '50%',
+          left: '50%',
+          transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px)) scale(${scale})`,
           transformOrigin: 'center center',
-          transition: isDragging || pinchStartDist.current ? 'none' : 'transform 0.2s ease-out',
+          transition: pinchStartDist.current ? 'none' : 'transform 0.15s ease-out',
           display: 'flex',
           gap: '1rem',
-          touchAction: 'none',
-          position: 'relative',
           zIndex: 2,
+          touchAction: 'none',
         }}
+        onTouchStart={handleTileTouchStart}
+        onTouchMove={handleTileTouchMove}
+        onTouchEnd={handleTileTouchEnd}
       >
+        {/* 시 타일 */}
         <div style={{ width: '45vw', aspectRatio: '1 / 1' }}>
           <FlipDigit
             value={hoursValue}
@@ -335,8 +342,10 @@ export function ClockScreen({
             fontFamily={fontFamily}
             topContent={<div>{year}. {month}. {day}.</div>}
             bottomLeftContent={
-              <button onClick={(e) => { e.stopPropagation(); onToggleAmPm(); }}
-                className="hover:opacity-70 transition-opacity min-w-[56px] text-center">
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleAmPm(); }}
+                className="hover:opacity-70 transition-opacity min-w-[56px] text-center"
+              >
                 {showAmPm ? (isPM ? 'PM' : 'AM') : '\u00A0'}
               </button>
             }
@@ -346,6 +355,7 @@ export function ClockScreen({
           />
         </div>
 
+        {/* 분 타일 */}
         <div style={{ width: '45vw', aspectRatio: '1 / 1' }}>
           <FlipDigit
             value={minutesValue}
@@ -354,8 +364,10 @@ export function ClockScreen({
             fontFamily={fontFamily}
             topContent={<div>{weekday}</div>}
             bottomRightContent={
-              <button onClick={(e) => { e.stopPropagation(); onToggleSeconds(); }}
-                className="hover:opacity-70 transition-opacity min-w-[56px] text-center">
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleSeconds(); }}
+                className="hover:opacity-70 transition-opacity min-w-[56px] text-center"
+              >
                 {showSeconds ? secondsValue : '\u00A0'}
               </button>
             }
