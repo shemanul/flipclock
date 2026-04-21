@@ -270,6 +270,7 @@ export function ClockScreen({
       lastTap.current = now;
 
       // ── 스와이프 처리 ──
+      //
       if (!isSwiping.current) return;
       const dx = e.changedTouches[0].clientX - swipeStartX.current;
       const dy = e.changedTouches[0].clientY - swipeStartY.current;

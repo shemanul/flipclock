@@ -23,7 +23,7 @@ export default function App() {
     keepScreenOn: false,
     cherryBlossom: false,
   });
-
+//
   // ── 픽셀 시프트 ──────────────────────────────────────────────
   const [shift, setShift] = useState({ x: 0, y: 0 });
 
