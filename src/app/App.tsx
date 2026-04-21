@@ -15,7 +15,7 @@ export default function App() {
     backgroundColor: '#fb9189',
     backgroundImage: '',
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-    subFontSize: 20,,
+    subFontSize: 20,
     subFontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
     screenSaver: false,
     particleRefresh: false,
