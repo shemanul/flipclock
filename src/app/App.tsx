@@ -45,7 +45,7 @@ export default function App() {
     const id = setInterval(tick, interval);
     return () => clearInterval(id);
   }, [settings.screenSaver, settings.particleRefresh]);
-
+ //-
   // ── 파티클 ───────────────────────────────────────────────────
   const PARTICLE_COUNT = 50;
   const [particles] = useState(() =>
