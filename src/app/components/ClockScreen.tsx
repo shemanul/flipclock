@@ -14,6 +14,9 @@ interface ClockScreenProps {
   cherryBlossom: boolean;
   onToggleAmPm: () => void;
   onToggleSeconds: () => void;
+  onSwipeLeft?: () => void;
+  onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
 }
 
 export function ClockScreen({
@@ -29,6 +32,9 @@ export function ClockScreen({
   cherryBlossom,
   onToggleAmPm,
   onToggleSeconds,
+  onSwipeLeft,
+  onSwipeUp,
+  onSwipeDown,
 }: ClockScreenProps) {
   const [time, setTime] = useState(new Date());
 
@@ -236,15 +242,40 @@ export function ClockScreen({
     }
   }, []);
 
+  const SWIPE_THRESHOLD = 70;
+
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
     if (e.touches.length < 2) pinchStartDist.current = null;
+
     if (e.touches.length === 0) {
+      const wasLongPressed   = isLongPressed.current;
+      const startTouch       = dragStartTouch.current; // 먼저 저장
+
+      // 상태 초기화
       isLongPressed.current  = false;
       dragStartTouch.current = null;
       setIsDragging(false);
+
+      // 드래그였으면 스와이프 처리 안 함
+      if (wasLongPressed) return;
+
+      // 스와이프 판정
+      if (startTouch && e.changedTouches.length === 1) {
+        const dx    = e.changedTouches[0].clientX - startTouch.x;
+        const dy    = e.changedTouches[0].clientY - startTouch.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (absDy > absDx && absDy > SWIPE_THRESHOLD) {
+          if (dy < 0) onSwipeUp?.();
+          else        onSwipeDown?.();
+        } else if (absDx > absDy && absDx > SWIPE_THRESHOLD) {
+          if (dx < 0) onSwipeLeft?.();
+        }
+      }
     }
-  }, []);
+  }, [onSwipeLeft, onSwipeUp, onSwipeDown]);
 
   // 더블탭 → 리셋 + 닫기버튼 표시 / 싱글탭 → 닫기버튼 숨기기
   const lastTap = useRef(0);
