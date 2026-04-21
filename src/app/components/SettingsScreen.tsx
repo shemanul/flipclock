@@ -310,8 +310,19 @@ function ColorRow({ label, color, onChange }: {
 export function SettingsScreen({ onClose, settings, onSettingsChange }: SettingsScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 사용자 저장 테마 (최대 6개, 최신순)
-  const [userThemes, setUserThemes] = useState<typeof DEFAULT_THEMES>([]);
+  // 사용자 저장 테마 — localStorage에 영구 저장
+  const STORAGE_KEY = 'flipclock-user-themes';
+  const [userThemes, setUserThemes] = useState<typeof DEFAULT_THEMES>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const persistThemes = (themes: typeof DEFAULT_THEMES) => {
+    setUserThemes(themes);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(themes)); } catch {}
+  };
 
   const update = (patch: Partial<Settings>) => onSettingsChange({ ...settings, ...patch });
 
@@ -331,11 +342,11 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
       textColor: settings.textColor,
       backgroundColor: settings.backgroundColor,
     };
-    setUserThemes((prev) => [newTheme, ...prev].slice(0, 6));
+    persistThemes([newTheme, ...userThemes].slice(0, 6));
   };
 
   const deleteUserTheme = (idx: number) => {
-    setUserThemes((prev) => prev.filter((_, i) => i !== idx));
+    persistThemes(userThemes.filter((_, i) => i !== idx));
   };
 
   const now = new Date();
