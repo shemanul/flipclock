@@ -6,11 +6,12 @@ interface FlipDigitProps {
   tileColor?: string;
   textColor?: string;
   fontFamily?: string;
-  fontSize?: number;          // ← 신규: 숫자(px). 없으면 clamp CSS 사용
+  fontSize?: number;
+  fontWeight?: string;        // ← 신규: bold 여부
   topContent?: ReactNode;
   bottomLeftContent?: ReactNode;
   bottomRightContent?: ReactNode;
-  subFontSize?: string;       // 부가정보 크기 — TimerScreen에서 `${n}px` 로 전달
+  subFontSize?: string;
   subFontFamily?: string;
   subTextColor?: string;
 }
@@ -23,6 +24,7 @@ export function FlipDigit({
   textColor = '#e5e5e5',
   fontFamily = 'system-ui, -apple-system, sans-serif',
   fontSize,
+  fontWeight = '700',
   topContent,
   bottomLeftContent,
   bottomRightContent,
@@ -57,7 +59,7 @@ export function FlipDigit({
   const numStyle: React.CSSProperties = {
     color: textColor,
     fontFamily,
-    fontWeight: '700',
+    fontWeight,
     fontSize: fontSize ? `${fontSize}px` : 'clamp(6rem, 20vw, 16rem)',
     lineHeight: 1,
     userSelect: 'none',

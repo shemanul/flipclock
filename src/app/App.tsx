@@ -16,6 +16,7 @@ export default function App() {
     backgroundImage: '',
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
     fontSize: 64,
+    fontBold: true,
     subFontSize: 20,
     subFontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
     screenSaver: false,
@@ -181,6 +182,7 @@ export default function App() {
                   backgroundColor={settings.backgroundColor}
                   backgroundImage={settings.backgroundImage}
                   fontFamily={settings.fontFamily}
+                  fontBold={settings.fontBold}
                   subFontSize={settings.subFontSize}
                   subFontFamily={settings.subFontFamily}
                   showAmPm={showAmPm}
@@ -207,6 +209,7 @@ export default function App() {
                     backgroundImage={settings.backgroundImage}
                     fontFamily={settings.fontFamily}
                     fontSize={settings.fontSize}
+                    fontBold={settings.fontBold}
                     subFontSize={settings.subFontSize}
                     subFontFamily={settings.subFontFamily}
                   />

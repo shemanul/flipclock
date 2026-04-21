@@ -8,8 +8,9 @@ interface TimerScreenProps {
   backgroundColor: string;
   backgroundImage?: string;
   fontFamily: string;
-  fontSize: number;         // ← string → number
-  subFontSize: number;      // ← string → number
+  fontSize: number;
+  fontBold?: boolean;
+  subFontSize: number;
   subFontFamily: string;
 }
 
@@ -20,6 +21,7 @@ export function TimerScreen({
   backgroundImage,
   fontFamily,
   fontSize,
+  fontBold = true,
   subFontSize,
   subFontFamily,
 }: TimerScreenProps) {
@@ -72,6 +74,7 @@ export function TimerScreen({
             textColor={textColor}
             fontFamily={fontFamily}
             fontSize={fontSize}
+            fontWeight={fontBold ? '700' : '400'}
             topContent={<div>분</div>}
             subFontSize={subFontSizeStr}
             subFontFamily={subFontFamily}
@@ -86,6 +89,7 @@ export function TimerScreen({
             textColor={textColor}
             fontFamily={fontFamily}
             fontSize={fontSize}
+            fontWeight={fontBold ? '700' : '400'}
             topContent={<div>초</div>}
             subFontSize={subFontSizeStr}
             subFontFamily={subFontFamily}

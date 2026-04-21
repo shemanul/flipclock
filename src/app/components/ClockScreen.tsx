@@ -7,6 +7,7 @@ interface ClockScreenProps {
   backgroundColor: string;
   backgroundImage?: string;
   fontFamily: string;
+  fontBold?: boolean;
   subFontSize: number | string;
   subFontFamily: string;
   showAmPm: boolean;
@@ -21,7 +22,7 @@ interface ClockScreenProps {
 
 export function ClockScreen({
   tileColor, textColor, backgroundColor, backgroundImage,
-  fontFamily, subFontSize, subFontFamily,
+  fontFamily, fontBold = true, subFontSize, subFontFamily,
   showAmPm, showSeconds, cherryBlossom,
   onToggleAmPm, onToggleSeconds,
   onSwipeLeft, onSwipeUp, onSwipeDown,
@@ -348,6 +349,7 @@ export function ClockScreen({
             tileColor={tileColor}
             textColor={textColor}
             fontFamily={fontFamily}
+            fontWeight={fontBold ? '700' : '400'}
             topContent={<div>{year}. {month}. {day}.</div>}
             bottomLeftContent={
               <button
@@ -370,6 +372,7 @@ export function ClockScreen({
             tileColor={tileColor}
             textColor={textColor}
             fontFamily={fontFamily}
+            fontWeight={fontBold ? '700' : '400'}
             topContent={<div>{weekday}</div>}
             bottomRightContent={
               <button

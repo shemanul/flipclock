@@ -10,6 +10,7 @@ export interface Settings {
   backgroundImage: string;
   fontFamily: string;
   fontSize: number;
+  fontBold: boolean;
   subFontFamily: string;
   subFontSize: number;
   screenSaver: boolean;
@@ -36,26 +37,32 @@ const DEFAULT_THEMES = [
 ];
 
 const fonts = [
-  { name: 'System UI',       value: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif' },
-  { name: 'Arial',           value: 'Arial, Helvetica, sans-serif' },
-  { name: 'Helvetica',       value: 'Helvetica, Arial, sans-serif' },
-  { name: 'Times New Roman', value: 'Times New Roman, Times, serif' },
-  { name: 'Georgia',         value: 'Georgia, serif' },
-  { name: 'Courier New',     value: 'Courier New, Courier, monospace' },
-  { name: 'Monaco',          value: 'Monaco, Consolas, monospace' },
-  { name: 'Verdana',         value: 'Verdana, Geneva, sans-serif' },
-  { name: 'Trebuchet MS',    value: 'Trebuchet MS, sans-serif' },
-  { name: 'Impact',          value: 'Impact, Charcoal, sans-serif' },
-  { name: 'Comic Sans MS',   value: 'Comic Sans MS, cursive' },
-  { name: 'Palatino',        value: 'Palatino Linotype, Book Antiqua, Palatino, serif' },
-  { name: 'Garamond',        value: 'Garamond, serif' },
-  { name: 'Bookman',         value: 'Bookman Old Style, serif' },
-  { name: 'Tahoma',          value: 'Tahoma, Geneva, sans-serif' },
-  { name: 'Lucida',          value: 'Lucida Sans Unicode, Lucida Grande, sans-serif' },
-  { name: 'Monospace',       value: 'ui-monospace, monospace' },
-  { name: 'Serif',           value: 'ui-serif, serif' },
-  { name: 'Sans-serif',      value: 'ui-sans-serif, sans-serif' },
-  { name: 'Rounded',         value: 'ui-rounded, sans-serif' },
+  { name: 'System UI',         value: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif' },
+  { name: 'Arial',             value: 'Arial, Helvetica, sans-serif' },
+  { name: 'Helvetica',         value: 'Helvetica, Arial, sans-serif' },
+  { name: 'Times New Roman',   value: 'Times New Roman, Times, serif' },
+  { name: 'Georgia',           value: 'Georgia, serif' },
+  { name: 'Courier New',       value: 'Courier New, Courier, monospace' },
+  { name: 'Monaco',            value: 'Monaco, Consolas, monospace' },
+  { name: 'Verdana',           value: 'Verdana, Geneva, sans-serif' },
+  { name: 'Trebuchet MS',      value: 'Trebuchet MS, sans-serif' },
+  { name: 'Impact',            value: 'Impact, Charcoal, sans-serif' },
+  { name: 'Comic Sans MS',     value: 'Comic Sans MS, cursive' },
+  { name: 'Palatino',          value: 'Palatino Linotype, Book Antiqua, Palatino, serif' },
+  { name: 'Garamond',          value: 'Garamond, serif' },
+  { name: 'Bookman',           value: 'Bookman Old Style, serif' },
+  { name: 'Tahoma',            value: 'Tahoma, Geneva, sans-serif' },
+  { name: 'Lucida',            value: 'Lucida Sans Unicode, Lucida Grande, sans-serif' },
+  { name: 'Monospace',         value: 'ui-monospace, monospace' },
+  { name: 'Serif',             value: 'ui-serif, serif' },
+  { name: 'Sans-serif',        value: 'ui-sans-serif, sans-serif' },
+  { name: 'Rounded',           value: 'ui-rounded, sans-serif' },
+  // ── Google Fonts ──
+  { name: 'Plus Jakarta Sans', value: "'Plus Jakarta Sans', sans-serif" },
+  { name: 'Great Vibes',       value: "'Great Vibes', cursive" },
+  { name: 'Princess Sofia',    value: "'Princess Sofia', cursive" },
+  { name: 'Pinyon Script',     value: "'Pinyon Script', cursive" },
+  { name: 'Parisienne',        value: "'Parisienne', cursive" },
 ];
 
 // ─── 유틸: HEX ↔ HSL 변환 ────────────────────────────────────
@@ -397,8 +404,8 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                 style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
                 {`${year}.${month}.${day}.`}
               </div>
-              <div className="absolute inset-0 flex items-center justify-center font-bold"
-                style={{ color: settings.textColor, fontFamily: settings.fontFamily, fontSize: `${previewMainSize}px` }}>
+              <div className="absolute inset-0 flex items-center justify-center"
+                style={{ color: settings.textColor, fontFamily: settings.fontFamily, fontSize: `${previewMainSize}px`, fontWeight: settings.fontBold ? 700 : 400 }}>
                 {h}
               </div>
               <div className="absolute bottom-0 left-0 px-1 pb-1"
@@ -414,8 +421,8 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                 style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
                 {weekday}
               </div>
-              <div className="absolute inset-0 flex items-center justify-center font-bold"
-                style={{ color: settings.textColor, fontFamily: settings.fontFamily, fontSize: `${previewMainSize}px` }}>
+              <div className="absolute inset-0 flex items-center justify-center"
+                style={{ color: settings.textColor, fontFamily: settings.fontFamily, fontSize: `${previewMainSize}px`, fontWeight: settings.fontBold ? 700 : 400 }}>
                 {m}
               </div>
               <div className="absolute bottom-0 right-0 px-1 pb-1"
@@ -564,6 +571,19 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-gray-400">글자 크기</span>
                 <SizeInput value={settings.fontSize} onChange={(v) => update({ fontSize: v })} min={24} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-gray-400">굵게 (Bold)</span>
+                <button
+                  onClick={() => update({ fontBold: !settings.fontBold })}
+                  className={`w-8 h-8 rounded-lg text-sm font-bold border transition-colors ${
+                    settings.fontBold
+                      ? 'bg-blue-500 text-white border-blue-500'
+                      : 'bg-white text-gray-400 border-gray-200'
+                  }`}
+                >
+                  B
+                </button>
               </div>
             </div>
             <div className="h-px bg-gray-100" />
