@@ -26,7 +26,7 @@ export function FlipDigit({
   topContent,
   bottomLeftContent,
   bottomRightContent,
-  subFontSize = '1.25rem',
+  subFontSize = '20px',
   subFontFamily = 'system-ui, -apple-system, sans-serif',
   subTextColor = '#ffffff',
 }: FlipDigitProps) {
