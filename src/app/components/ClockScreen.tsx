@@ -145,7 +145,6 @@ export function ClockScreen({
   const [scale, setScale]           = useState(DEFAULT_SCALE);
   const [pos, setPos]               = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [showCloseBtn, setShowCloseBtn] = useState(false);
 
   const lastScale       = useRef(DEFAULT_SCALE);
   const lastPos         = useRef({ x: 0, y: 0 });
@@ -160,8 +159,16 @@ export function ClockScreen({
   const touchStart      = useRef<{ x: number; y: number } | null>(null);
   const dragStartPos    = useRef({ x: 0, y: 0 });
 
-  // 더블탭
+  // 더블탭 → 리셋 + 전체화면 토글
   const lastTap = useRef(0);
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  };
 
   const getDistance = (touches: React.TouchList) => {
     const dx = touches[0].clientX - touches[1].clientX;
@@ -265,21 +272,17 @@ export function ClockScreen({
           // ── 탭 / 더블탭 ──
           const now = Date.now();
           if (now - lastTap.current < 300) {
-            // 더블탭 → 리셋 + 닫기 버튼
+            // 더블탭 → 리셋 + 전체화면 토글
             lastScale.current = DEFAULT_SCALE;
             lastPos.current   = { x: 0, y: 0 };
             setScale(DEFAULT_SCALE);
             setPos({ x: 0, y: 0 });
-            setShowCloseBtn(true);
+            toggleFullscreen();
             lastTap.current = 0;
           } else {
-            // 싱글탭 → 닫기 버튼 숨기기
-            setShowCloseBtn(false);
             lastTap.current = now;
-          }
-        } else if (dist >= SWIPE_MIN) {
+          } else if (dist >= SWIPE_MIN) {
           // ── 스와이프 ──
-          setShowCloseBtn(false);
           if (absDy > absDx) {
             if (dy < 0) onSwipeUp?.();
             else        onSwipeDown?.();
@@ -319,18 +322,6 @@ export function ClockScreen({
         >
           드래그로 이동 · 더블탭으로 리셋
         </div>
-      )}
-
-      {/* 닫기 버튼 */}
-      {showCloseBtn && (
-        <button
-          onClick={() => window.close()}
-          className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium text-white"
-          style={{ zIndex: 20, backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}
-        >
-          <span>✕</span>
-          <span>앱 종료</span>
-        </button>
       )}
 
       {/* 타일 — 화면 중앙 기준 위치 */}
