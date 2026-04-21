@@ -13,8 +13,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FlipClock" />
 
-    <!-- 뷰포트: 브라우저 핀치줌 완전 차단 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!-- 뷰포트: 노치/펀치홀 영역까지 확장 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- iOS 아이콘 -->
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
@@ -25,33 +25,24 @@
     <title>FlipClock</title>
 
     <style>
-      /* 전체화면 꽉 채우기 */
+      /* 전체화면 꽉 채우기 — 노치/홈바 영역 포함 */
       html, body, #root {
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
+        /* iOS safe area 대응 */
         height: 100dvh;
         overflow: hidden;
         background: #0f4c5c;
       }
       body {
+        /* 노치·홈바 safe area 패딩 */
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
         box-sizing: border-box;
-      }
-      /* 브라우저 길게 누르기 메뉴 / 텍스트 선택 / 핀치줌 완전 차단 */
-      * {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-        touch-action: manipulation;
-      }
-      /* 캔버스는 touch-action none 유지 */
-      canvas {
-        touch-action: none;
       }
     </style>
   </head>
@@ -59,6 +50,7 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
+    <!-- 서비스 워커 등록 -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
