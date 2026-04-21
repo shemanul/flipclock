@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { FlipDigit } from './FlipDigit';
 
 interface ClockScreenProps {
@@ -7,7 +7,7 @@ interface ClockScreenProps {
   backgroundColor: string;
   backgroundImage?: string;
   fontFamily: string;
-  subFontSize: string;
+  subFontSize: number | string;
   subFontFamily: string;
   showAmPm: boolean;
   showSeconds: boolean;
@@ -53,15 +53,17 @@ export function ClockScreen({
   const minutesValue = String(minutes).padStart(2, '0');
   const secondsValue = String(seconds).padStart(2, '0');
 
+  // subFontSize → string 변환
+  const subFontSizeStr = typeof subFontSize === 'number' ? `${subFontSize}px` : subFontSize;
+
   // ── 벚꽃 캔버스 ───────────────────────────────────────────────
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef   = useRef<number>(0);
 
   useEffect(() => {
-    if (!cherryBlossom) {
-      cancelAnimationFrame(animRef.current);
-      return;
-    }
+    cancelAnimationFrame(animRef.current);
+    if (!cherryBlossom) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -75,11 +77,11 @@ export function ClockScreen({
     window.addEventListener('resize', resize);
 
     const colors = [
-      'rgba(255, 182, 193, 0.85)',
-      'rgba(255, 160, 180, 0.80)',
-      'rgba(255, 200, 210, 0.75)',
-      'rgba(250, 210, 220, 0.70)',
-      'rgba(255, 240, 245, 0.80)',
+      'rgba(255, 182, 193, 0.9)',
+      'rgba(255, 150, 170, 0.85)',
+      'rgba(255, 200, 215, 0.8)',
+      'rgba(250, 205, 220, 0.75)',
+      'rgba(255, 235, 240, 0.85)',
     ];
 
     type Petal = {
@@ -93,28 +95,27 @@ export function ClockScreen({
       opacity: number;
     };
 
-    const COUNT = 60;
-    const petals: Petal[] = Array.from({ length: COUNT }, () => ({
+    const petals: Petal[] = Array.from({ length: 60 }, () => ({
       x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight - window.innerHeight,
+      y: Math.random() * window.innerHeight,
       vx: (Math.random() - 0.5) * 0.8,
       vy: Math.random() * 1.2 + 0.6,
-      size: Math.random() * 10 + 7,
+      size: Math.random() * 12 + 8,
       angle: Math.random() * Math.PI * 2,
-      spin: (Math.random() - 0.5) * 0.04,
+      spin: (Math.random() - 0.5) * 0.05,
       swaySpeed: Math.random() * 0.02 + 0.008,
       swayOffset: Math.random() * Math.PI * 2,
       color: colors[Math.floor(Math.random() * colors.length)],
       type: Math.random() < 0.6 ? 'oval' : 'heart',
-      opacity: Math.random() * 0.4 + 0.6,
+      opacity: Math.random() * 0.35 + 0.65,
     }));
 
     const drawHeart = (ctx: CanvasRenderingContext2D, size: number) => {
       const s = size * 0.5;
       ctx.beginPath();
       ctx.moveTo(0, -s * 0.3);
-      ctx.bezierCurveTo( s, -s,       s * 1.2,  s * 0.5, 0,  s);
-      ctx.bezierCurveTo(-s * 1.2, s * 0.5, -s, -s,       0, -s * 0.3);
+      ctx.bezierCurveTo( s, -s,        s * 1.2,  s * 0.5, 0,  s);
+      ctx.bezierCurveTo(-s * 1.2, s * 0.5, -s, -s,        0, -s * 0.3);
       ctx.closePath();
     };
 
@@ -127,13 +128,11 @@ export function ClockScreen({
     let t = 0;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      t += 1;
-
+      t++;
       petals.forEach((p) => {
-        p.x += p.vx + Math.sin(t * p.swaySpeed + p.swayOffset) * 0.6;
+        p.x += p.vx + Math.sin(t * p.swaySpeed + p.swayOffset) * 0.7;
         p.y += p.vy;
         p.angle += p.spin;
-
         if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
         if (p.x < -20) p.x = canvas.width + 20;
         if (p.x > canvas.width + 20) p.x = -20;
@@ -142,17 +141,14 @@ export function ClockScreen({
         ctx.translate(p.x, p.y);
         ctx.rotate(p.angle);
         ctx.globalAlpha = p.opacity;
-        ctx.fillStyle = p.color;
-        ctx.shadowColor = 'rgba(200, 100, 130, 0.3)';
-        ctx.shadowBlur  = 4;
-
+        ctx.fillStyle   = p.color;
+        ctx.shadowColor = 'rgba(220, 100, 140, 0.4)';
+        ctx.shadowBlur  = 5;
         if (p.type === 'heart') drawHeart(ctx, p.size);
         else drawOval(ctx, p.size);
-
         ctx.fill();
         ctx.restore();
       });
-
       animRef.current = requestAnimationFrame(animate);
     };
 
@@ -163,20 +159,24 @@ export function ClockScreen({
     };
   }, [cherryBlossom]);
 
-  // ── 핀치줌 + 두 손가락 드래그 ────────────────────────────────
+  // ── 핀치 줌 + 길게 누르기 드래그 ────────────────────────────
   const DEFAULT_SCALE = 0.5;
-  const MIN_SCALE     = 0.4;
+  const MIN_SCALE     = 0.3;
   const MAX_SCALE     = 2.5;
+  const LONG_PRESS_MS = 400;
 
-  const [scale, setScale] = useState(DEFAULT_SCALE);
-  const [pos, setPos]     = useState({ x: 0, y: 0 });
+  const [scale, setScale]       = useState(DEFAULT_SCALE);
+  const [pos, setPos]           = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
 
   const lastScale       = useRef(DEFAULT_SCALE);
   const lastPos         = useRef({ x: 0, y: 0 });
   const pinchStartDist  = useRef<number | null>(null);
   const pinchStartScale = useRef(DEFAULT_SCALE);
-  const dragStartMid    = useRef<{ x: number; y: number } | null>(null);
+  const longPressTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragStartTouch  = useRef<{ x: number; y: number } | null>(null);
   const dragStartPos    = useRef({ x: 0, y: 0 });
+  const isLongPressed   = useRef(false);
 
   const getDistance = (touches: React.TouchList) => {
     const dx = touches[0].clientX - touches[1].clientX;
@@ -184,50 +184,72 @@ export function ClockScreen({
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const getMidpoint = (touches: React.TouchList) => ({
-    x: (touches[0].clientX + touches[1].clientX) / 2,
-    y: (touches[0].clientY + touches[1].clientY) / 2,
-  });
-
-  const handleTilesTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      isLongPressed.current = false;
+      setIsDragging(false);
       e.stopPropagation();
       pinchStartDist.current  = getDistance(e.touches);
       pinchStartScale.current = lastScale.current;
-      dragStartMid.current    = getMidpoint(e.touches);
-      dragStartPos.current    = { ...lastPos.current };
+      return;
     }
-  };
+    if (e.touches.length === 1) {
+      isLongPressed.current  = false;
+      dragStartTouch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      dragStartPos.current   = { ...lastPos.current };
+      longPressTimer.current = setTimeout(() => {
+        isLongPressed.current = true;
+        setIsDragging(true);
+      }, LONG_PRESS_MS);
+    }
+  }, []);
 
-  const handleTilesTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2 && pinchStartDist.current !== null) {
       e.stopPropagation();
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
       const dist  = getDistance(e.touches);
       const ratio = dist / pinchStartDist.current;
       const next  = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pinchStartScale.current * ratio));
       lastScale.current = next;
       setScale(next);
-      if (dragStartMid.current) {
-        const mid    = getMidpoint(e.touches);
-        const newPos = {
-          x: dragStartPos.current.x + mid.x - dragStartMid.current.x,
-          y: dragStartPos.current.y + mid.y - dragStartMid.current.y,
-        };
-        lastPos.current = newPos;
-        setPos(newPos);
+      return;
+    }
+    if (e.touches.length === 1 && isLongPressed.current && dragStartTouch.current) {
+      e.stopPropagation();
+      const newPos = {
+        x: dragStartPos.current.x + e.touches[0].clientX - dragStartTouch.current.x,
+        y: dragStartPos.current.y + e.touches[0].clientY - dragStartTouch.current.y,
+      };
+      lastPos.current = newPos;
+      setPos(newPos);
+      return;
+    }
+    // 손가락이 움직이면 길게 누르기 취소 → 부모 스와이프 허용
+    if (e.touches.length === 1 && !isLongPressed.current && dragStartTouch.current) {
+      const dx = Math.abs(e.touches[0].clientX - dragStartTouch.current.x);
+      const dy = Math.abs(e.touches[0].clientY - dragStartTouch.current.y);
+      if (dx > 8 || dy > 8) {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
       }
     }
-  };
+  }, []);
 
-  const handleTilesTouchEnd = (e: React.TouchEvent) => {
-    if (e.touches.length < 2) {
-      pinchStartDist.current = null;
-      dragStartMid.current   = null;
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    if (e.touches.length < 2) pinchStartDist.current = null;
+    if (e.touches.length === 0) {
+      isLongPressed.current  = false;
+      dragStartTouch.current = null;
+      setIsDragging(false);
     }
-  };
+  }, []);
 
+  // 더블탭 → 리셋
   const lastTap = useRef(0);
-  const handleDoubleTap = () => {
+  const handleTap = useCallback(() => {
+    if (isLongPressed.current) return;
     const now = Date.now();
     if (now - lastTap.current < 300) {
       lastScale.current = DEFAULT_SCALE;
@@ -236,7 +258,7 @@ export function ClockScreen({
       setPos({ x: 0, y: 0 });
     }
     lastTap.current = now;
-  };
+  }, []);
 
   return (
     <div
@@ -257,22 +279,33 @@ export function ClockScreen({
         />
       )}
 
+      {/* 드래그 모드 안내 */}
+      {isDragging && (
+        <div
+          className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs text-white/80 pointer-events-none"
+          style={{ zIndex: 10, backgroundColor: 'rgba(0,0,0,0.35)' }}
+        >
+          드래그로 이동 · 더블탭으로 리셋
+        </div>
+      )}
+
       {/* 타일 컨테이너 */}
       <div
-        onTouchStart={handleTilesTouchStart}
-        onTouchMove={handleTilesTouchMove}
-        onTouchEnd={handleTilesTouchEnd}
-        onTouchCancel={handleTilesTouchEnd}
-        onClick={handleDoubleTap}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        onClick={handleTap}
         style={{
           transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`,
           transformOrigin: 'center center',
-          transition: pinchStartDist.current ? 'none' : 'transform 0.2s ease-out',
+          transition: isDragging || pinchStartDist.current ? 'none' : 'transform 0.2s ease-out',
           display: 'flex',
           gap: '1rem',
           touchAction: 'none',
           position: 'relative',
           zIndex: 2,
+          cursor: isDragging ? 'grabbing' : 'default',
         }}
       >
         {/* 시 타일 */}
@@ -291,7 +324,7 @@ export function ClockScreen({
                 {showAmPm ? (isPM ? 'PM' : 'AM') : '\u00A0'}
               </button>
             }
-            subFontSize={subFontSize}
+            subFontSize={subFontSizeStr}
             subFontFamily={subFontFamily}
             subTextColor={textColor}
           />
@@ -313,7 +346,7 @@ export function ClockScreen({
                 {showSeconds ? secondsValue : '\u00A0'}
               </button>
             }
-            subFontSize={subFontSize}
+            subFontSize={subFontSizeStr}
             subFontFamily={subFontFamily}
             subTextColor={textColor}
           />
