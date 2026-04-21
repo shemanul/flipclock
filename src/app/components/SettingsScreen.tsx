@@ -1,5 +1,5 @@
 import { X, Upload, Trash2, Monitor, Zap, Sun, ChevronUp, ChevronDown } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 
 // ─── 타입 ─────────────────────────────────────────────────────
 
@@ -199,18 +199,12 @@ function SizeInput({
 
 export function SettingsScreen({ onClose, settings, onSettingsChange }: SettingsScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // 색상 이력 — 최근 10개
-  const [colorHistory, setColorHistory] = useState<string[]>([]);
 
   const update = (patch: Partial<Settings>) =>
     onSettingsChange({ ...settings, ...patch });
 
   const updateColor = (key: keyof Settings, value: string) => {
     update({ [key]: value });
-    setColorHistory((prev) => {
-      const filtered = prev.filter((c) => c !== value);
-      return [value, ...filtered].slice(0, 10);
-    });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -449,80 +443,53 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
             {/* 색상 직접 지정 */}
             <div>
               <p className="text-[10px] text-gray-400 mb-1.5">색상 직접 지정</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-2">
                 {(
                   [
                     { label: '타일 배경', key: 'tileColor' },
                     { label: '타일 글자', key: 'textColor' },
                     { label: '배경색',   key: 'backgroundColor' },
                   ] as { label: string; key: keyof Settings }[]
-                ).map(({ label, key }) => (
-                  <div key={key} className="flex flex-col items-center gap-1">
-                    <input
-                      type="color"
-                      value={settings[key] as string}
-                      onChange={(e) => updateColor(key, e.target.value)}
-                      className="w-full h-8 rounded-lg cursor-pointer border border-gray-200"
-                      list={`color-history-${key}`}
-                    />
-                    <span className="text-[10px] text-gray-500 text-center leading-tight">{label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* 색상 이력 */}
-              {colorHistory.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-[10px] text-gray-400 mb-1">최근 사용 색상</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {colorHistory.map((color, i) => (
-                      <button
-                        key={i}
-                        title={color}
-                        onClick={() => {
-                          // 가장 마지막에 변경한 컬러 키에 적용 — 탭한 색상칩을 선택된 피커에 적용
-                          // 여기선 단순히 tileColor에 적용 (또는 사용자가 직접 색상칩 드래그)
+                ).map(({ label, key }) => {
+                  const currentColor = settings[key] as string;
+                  return (
+                    <div key={key} className="flex items-center gap-2">
+                      {/* 색상 피커 */}
+                      <input
+                        type="color"
+                        value={currentColor}
+                        onChange={(e) => updateColor(key, e.target.value)}
+                        className="w-9 h-9 rounded-lg cursor-pointer border border-gray-200 flex-shrink-0 p-0.5"
+                      />
+                      {/* HEX 직접 입력 */}
+                      <input
+                        type="text"
+                        value={currentColor}
+                        maxLength={7}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          // # 자동 추가
+                          const hex = v.startsWith('#') ? v : `#${v}`;
+                          // 유효한 hex만 적용
+                          if (/^#[0-9A-Fa-f]{0,6}$/.test(hex)) {
+                            if (hex.length === 7) updateColor(key, hex);
+                            else update({ [key]: hex });
+                          }
                         }}
-                        className="group relative"
-                      >
-                        <div
-                          className="w-6 h-6 rounded-md border border-gray-200 shadow-sm hover:scale-110 transition-transform"
-                          style={{ backgroundColor: color }}
-                        />
-                        {/* 호버시 hex값 표시 */}
-                        <span className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[9px] px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                          {color}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  {/* 이력 색상을 각 키에 적용하는 버튼 */}
-                  <div className="mt-2 grid grid-cols-3 gap-1.5">
-                    {(
-                      [
-                        { label: '타일배경에 적용', key: 'tileColor' },
-                        { label: '글자색에 적용',   key: 'textColor' },
-                        { label: '배경색에 적용',   key: 'backgroundColor' },
-                      ] as { label: string; key: keyof Settings }[]
-                    ).map(({ label, key }) => (
-                      <div key={key} className="flex flex-col gap-1">
-                        <p className="text-[9px] text-gray-400 text-center">{label}</p>
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          {colorHistory.slice(0, 5).map((color, i) => (
-                            <button
-                              key={i}
-                              onClick={() => updateColor(key, color)}
-                              className="w-5 h-5 rounded border border-gray-200 hover:scale-110 transition-transform"
-                              style={{ backgroundColor: color }}
-                              title={color}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                        className="flex-1 text-xs font-mono border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-blue-400 text-gray-700 uppercase"
+                        placeholder="#000000"
+                        spellCheck={false}
+                      />
+                      {/* 현재 색상 미리보기 */}
+                      <div
+                        className="w-7 h-7 rounded-lg border border-gray-200 flex-shrink-0"
+                        style={{ backgroundColor: currentColor }}
+                      />
+                      <span className="text-[10px] text-gray-400 w-10 flex-shrink-0">{label}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* 배경 이미지 */}
