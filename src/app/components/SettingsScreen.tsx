@@ -660,12 +660,13 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                 <Toggle checked={settings.particleOn} onChange={() => update({ particleOn: !settings.particleOn })} accentColor="#3b82f6" />
               </div>
               {settings.particleOn && (
-                <div className="grid grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {[
                     { value: 'cherry', label: '🌸 벚꽃', color: '#ffc0cb' },
                     { value: 'leaf', label: '🌿 초록잎', color: '#90ee90' },
                     { value: 'autumn', label: '🍂 낙엽', color: '#ff8c00' },
                     { value: 'snow', label: '❄️ 눈꽃', color: '#e0f7ff' },
+                    { value: 'rain', label: '🌧️ 비', color: '#87ceeb' },
                   ].map(({ value, label, color }) => (
                     <button
                       key={value}
