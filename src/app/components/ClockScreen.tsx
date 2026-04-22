@@ -101,6 +101,7 @@ export function ClockScreen({
       x: number; y: number; vx: number; vy: number; size: number;
       angle: number; spin: number; swaySpeed: number; swayOffset: number;
       color: string; type: 'oval' | 'heart'; opacity: number;
+      lifespan?: number; isHitting?: boolean;
     };
 
     const petals: Petal[] = Array.from({ length: 60 }, () => ({
@@ -161,24 +162,79 @@ export function ClockScreen({
       }
     };
 
+    const drawRain = (ctx: CanvasRenderingContext2D, size: number) => {
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.5);
+      ctx.lineTo(0, size * 0.5);
+      ctx.lineWidth = Math.max(1.5, size * 0.15);
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    };
+
+    const splashParticles: Petal[] = [];
+
     let t = 0;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       t++;
+
+      // ── 기존 입자 업데이트 ──
       petals.forEach((p) => {
-        p.x += p.vx + Math.sin(t * p.swaySpeed + p.swayOffset) * 0.7;
-        p.y += p.vy;
-        p.angle += p.spin;
-        if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
+        if (particleType === 'rain') {
+          if (!p.isHitting) {
+            p.x += (Math.random() - 0.5) * 0.3;
+            p.y += 4;
+            if (p.y > canvas.height - 20) {
+              p.isHitting = true;
+              p.lifespan = 15;
+              for (let i = 0; i < 6; i++) {
+                splashParticles.push({
+                  x: p.x + (Math.random() - 0.5) * 10,
+                  y: canvas.height - 5,
+                  vx: (Math.random() - 0.5) * 3,
+                  vy: -Math.random() * 2 - 1,
+                  size: Math.random() * 2 + 1,
+                  angle: 0,
+                  spin: 0,
+                  swaySpeed: 0,
+                  swayOffset: 0,
+                  color: p.color,
+                  type: 'oval',
+                  opacity: 0.6,
+                  lifespan: 20,
+                });
+              }
+            }
+          } else {
+            p.lifespan = (p.lifespan || 0) - 1;
+            p.opacity = Math.max(0, (p.lifespan || 0) / 15);
+            if ((p.lifespan || 0) <= 0) {
+              p.y = -20;
+              p.x = Math.random() * canvas.innerWidth;
+              p.isHitting = false;
+              p.lifespan = undefined;
+              p.opacity = 1;
+            }
+          }
+        } else {
+          p.x += p.vx + Math.sin(t * p.swaySpeed + p.swayOffset) * 0.7;
+          p.y += p.vy;
+          p.angle += p.spin;
+          if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
+        }
         if (p.x < -20) p.x = canvas.width + 20;
         if (p.x > canvas.width + 20) p.x = -20;
+
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.angle);
         ctx.globalAlpha = p.opacity;
         ctx.shadowColor = 'rgba(220,100,140,0.4)';
         ctx.shadowBlur = 5;
-        if (particleType === 'snow') {
+        if (particleType === 'rain') {
+          ctx.strokeStyle = p.color;
+          drawRain(ctx, p.size);
+        } else if (particleType === 'snow') {
           ctx.strokeStyle = p.color;
           drawSnowflake(ctx, p.size);
         } else {
@@ -189,6 +245,29 @@ export function ClockScreen({
         }
         ctx.restore();
       });
+
+      // ── 튀김 입자 업데이트 ──
+      splashParticles.forEach((p, i) => {
+        p.x += p.vx;
+        p.y += p.vy + 0.1;
+        p.vy += 0.1;
+        p.lifespan = (p.lifespan || 0) - 1;
+        p.opacity = Math.max(0, (p.lifespan || 0) / 20);
+        if ((p.lifespan || 0) <= 0) splashParticles.splice(i, 1);
+        else {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.globalAlpha = p.opacity;
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = 'rgba(100,150,200,0.2)';
+          ctx.shadowBlur = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      });
+
       animRef.current = requestAnimationFrame(animate);
     };
     animate();
