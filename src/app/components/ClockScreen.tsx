@@ -364,7 +364,7 @@ export function ClockScreen({
     >
       {/* 파티클 캔버스 */}
       {particleOn && (
-        <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }} />
+        <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }} />
       )}
 
       {/* 드래그 안내 */}
