@@ -29,7 +29,7 @@ interface SettingsScreenProps {
 
 // ─── 상수 ─────────────────────────────────────────────────────
 
-const APP_VERSION = 'v0.5.0-20260422-1730';
+const APP_VERSION = 'v0.5.1-20260422-1800';
 
 const DEFAULT_THEMES = [
   { name: '기본',   tileColor: '#0f4c5c', textColor: '#e5e5e5', backgroundColor: '#fb9189', backgroundImage: '' },
@@ -412,7 +412,7 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
               backgroundSize: 'cover', backgroundPosition: 'center', aspectRatio: '2 / 1',
             }}>
             {/* 타일 컨테이너 (투명도 적용) */}
-            <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', justifyContent: 'center', opacity: settings.clockOpacity }}>
+            <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', justifyContent: 'center', opacity: settings.clockOpacity, height: '100%', width: '100%' }}>
               {/* 시 타일 */}
               <div className="relative rounded-xl shadow overflow-hidden flex-shrink-0"
                 style={{ aspectRatio: '1/1', height: '78%', backgroundColor: settings.tileColor }}>
