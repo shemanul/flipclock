@@ -134,22 +134,30 @@ export function ClockScreen({
     };
 
     const drawSnowflake = (ctx: CanvasRenderingContext2D, size: number) => {
-      const s = size * 0.4;
-      ctx.beginPath();
+      const s = size * 0.35;
+      const lineWidth = size * 0.08;
       for (let i = 0; i < 6; i++) {
         const angle = (i * Math.PI) / 3;
         const x = Math.cos(angle) * s;
         const y = Math.sin(angle) * s;
+        ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(x, y);
-        const bx = Math.cos(angle) * s * 0.6;
-        const by = Math.sin(angle) * s * 0.6;
-        const side1 = (angle + Math.PI / 6) * 0.5;
-        ctx.moveTo(bx + Math.cos(side1) * s * 0.3, by + Math.sin(side1) * s * 0.3);
-        ctx.lineTo(x, y);
-        const side2 = (angle - Math.PI / 6) * 0.5;
-        ctx.moveTo(bx + Math.cos(side2) * s * 0.3, by + Math.sin(side2) * s * 0.3);
-        ctx.lineTo(x, y);
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        const bx = Math.cos(angle) * s * 0.5;
+        const by = Math.sin(angle) * s * 0.5;
+        const side1 = angle + Math.PI / 6;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx + Math.cos(side1) * s * 0.35, by + Math.sin(side1) * s * 0.35);
+        ctx.stroke();
+        const side2 = angle - Math.PI / 6;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx + Math.cos(side2) * s * 0.35, by + Math.sin(side2) * s * 0.35);
+        ctx.stroke();
       }
     };
 
@@ -168,13 +176,17 @@ export function ClockScreen({
         ctx.translate(p.x, p.y);
         ctx.rotate(p.angle);
         ctx.globalAlpha = p.opacity;
-        ctx.fillStyle = p.color;
         ctx.shadowColor = 'rgba(220,100,140,0.4)';
         ctx.shadowBlur = 5;
-        if (particleType === 'snow') drawSnowflake(ctx, p.size);
-        else if (particleType === 'cherry' && p.type === 'heart') drawHeart(ctx, p.size);
-        else drawOval(ctx, p.size);
-        ctx.fill();
+        if (particleType === 'snow') {
+          ctx.strokeStyle = p.color;
+          drawSnowflake(ctx, p.size);
+        } else {
+          ctx.fillStyle = p.color;
+          if (particleType === 'cherry' && p.type === 'heart') drawHeart(ctx, p.size);
+          else drawOval(ctx, p.size);
+          ctx.fill();
+        }
         ctx.restore();
       });
       animRef.current = requestAnimationFrame(animate);
