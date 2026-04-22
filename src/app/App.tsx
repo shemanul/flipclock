@@ -4,27 +4,44 @@ import { ClockScreen } from './components/ClockScreen';
 import { TimerScreen } from './components/TimerScreen';
 import { SettingsScreen, Settings } from './components/SettingsScreen';
 
+const DEFAULT_SETTINGS: Settings = {
+  tileColor: '#0f4c5c',
+  textColor: '#e5e5e5',
+  backgroundColor: '#fb9189',
+  backgroundImage: '',
+  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+  fontSize: 64,
+  fontBold: true,
+  subFontSize: 20,
+  subFontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+  screenSaver: false,
+  particleRefresh: false,
+  keepScreenOn: false,
+  cherryBlossom: false,
+  clockOpacity: 1,
+  clockPosition: { x: 0, y: 0 },
+};
+
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<'clock' | 'timer'>('clock');
   const [showSettings, setShowSettings] = useState(false);
   const [showAmPm, setShowAmPm] = useState(true);
   const [showSeconds, setShowSeconds] = useState(true);
-  const [settings, setSettings] = useState<Settings>({
-    tileColor: '#0f4c5c',
-    textColor: '#e5e5e5',
-    backgroundColor: '#fb9189',
-    backgroundImage: '',
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-    fontSize: 64,
-    fontBold: true,
-    subFontSize: 20,
-    subFontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-    screenSaver: false,
-    particleRefresh: false,
-    keepScreenOn: false,
-    cherryBlossom: false,
+  const [settings, setSettings] = useState<Settings>(() => {
+    try {
+      const saved = localStorage.getItem('flipclock-settings');
+      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
   });
-//
+  // ── localStorage에 settings 저장 ──────────────────────────
+  useEffect(() => {
+    try {
+      localStorage.setItem('flipclock-settings', JSON.stringify(settings));
+    } catch {}
+  }, [settings]);
+
   // ── 픽셀 시프트 ──────────────────────────────────────────────
   const [shift, setShift] = useState({ x: 0, y: 0 });
 
@@ -188,6 +205,9 @@ export default function App() {
                   showAmPm={showAmPm}
                   showSeconds={showSeconds}
                   cherryBlossom={settings.cherryBlossom}
+                  clockOpacity={settings.clockOpacity}
+                  clockPosition={settings.clockPosition}
+                  onPositionChange={(pos) => setSettings(s => ({ ...s, clockPosition: pos }))}
                   onToggleAmPm={() => setShowAmPm(v => !v)}
                   onToggleSeconds={() => setShowSeconds(v => !v)}
                   onSwipeLeft={() => setCurrentScreen('timer')}

@@ -17,6 +17,8 @@ export interface Settings {
   particleRefresh: boolean;
   keepScreenOn: boolean;
   cherryBlossom: boolean;
+  clockOpacity: number;
+  clockPosition: { x: number; y: number };
 }
 
 interface SettingsScreenProps {
@@ -27,7 +29,7 @@ interface SettingsScreenProps {
 
 // ─── 상수 ─────────────────────────────────────────────────────
 
-const APP_VERSION = 'v0.4.0-20260422-1600';
+const APP_VERSION = 'v0.5.0-20260422-1730';
 
 const DEFAULT_THEMES = [
   { name: '기본',   tileColor: '#0f4c5c', textColor: '#e5e5e5', backgroundColor: '#fb9189', backgroundImage: '' },
@@ -41,8 +43,8 @@ const DEFAULT_THEMES = [
 const BACKGROUND_IMAGE_THEMES = [
   { name: '이미지1', tileColor: '#FCABF8', textColor: '#4D0049', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img01.png' },
   { name: '이미지2', tileColor: '#FCABF8', textColor: '#4D0049', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img02.png' },
-  { name: '이미지3', tileColor: '#1E5A8A', textColor: '#DBEAFE', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img03.png' },
-  { name: '이미지4', tileColor: '#9A3412', textColor: '#FED7AA', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img04.png' },
+  { name: '이미지3', tileColor: '#1E5A8A', textColor: '#DBEAFE', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img03.jpg' },
+  { name: '이미지4', tileColor: '#9A3412', textColor: '#FED7AA', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img04.jpg' },
   { name: '이미지5', tileColor: '#0F4C5C', textColor: '#E5E5E5', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img05.jpg' },
   { name: '이미지6', tileColor: '#1E5A84', textColor: '#DBEAFE', backgroundColor: '#3B82F6', backgroundImage: '/background_images/bg_img06.jpg' },
 ];
@@ -624,6 +626,26 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
           {/* 화면 설정 */}
           <div className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 space-y-2.5">
             <SectionTitle>화면 설정</SectionTitle>
+
+            {/* 시계 투명도 */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-gray-500">시계 투명도</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={settings.clockOpacity}
+                  onChange={(e) => update({ clockOpacity: parseFloat(e.target.value) })}
+                  className="w-24 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #d1d5db 0%, #3b82f6 ${settings.clockOpacity * 100}%, #d1d5db ${settings.clockOpacity * 100}%, #d1d5db 100%)`,
+                  }}
+                />
+                <span className="text-[10px] font-mono text-gray-400 w-8 text-right">{Math.round(settings.clockOpacity * 100)}%</span>
+              </div>
+            </div>
 
             {/* 화면 보호 */}
             <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-100">

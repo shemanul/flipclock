@@ -13,6 +13,9 @@ interface ClockScreenProps {
   showAmPm: boolean;
   showSeconds: boolean;
   cherryBlossom: boolean;
+  clockOpacity: number;
+  clockPosition: { x: number; y: number };
+  onPositionChange: (pos: { x: number; y: number }) => void;
   onToggleAmPm: () => void;
   onToggleSeconds: () => void;
   onSwipeLeft?: () => void;
@@ -24,6 +27,7 @@ export function ClockScreen({
   tileColor, textColor, backgroundColor, backgroundImage,
   fontFamily, fontBold = true, subFontSize, subFontFamily,
   showAmPm, showSeconds, cherryBlossom,
+  clockOpacity, clockPosition, onPositionChange,
   onToggleAmPm, onToggleSeconds,
   onSwipeLeft, onSwipeUp, onSwipeDown,
 }: ClockScreenProps) {
@@ -144,8 +148,20 @@ export function ClockScreen({
   const MOVE_CANCEL    = 15;   // 길게 누르기 취소 거리
 
   const [scale, setScale]           = useState(DEFAULT_SCALE);
-  const [pos, setPos]               = useState({ x: 0, y: 0 });
+  const [pos, setPos]               = useState(clockPosition);
   const [isDragging, setIsDragging] = useState(false);
+
+  // clockPosition props 변경 시 동기화
+  useEffect(() => {
+    setPos(clockPosition);
+  }, [clockPosition]);
+
+  // pos 변경 시 부모에 전달
+  const posRef = useRef(pos);
+  useEffect(() => {
+    posRef.current = pos;
+    onPositionChange(pos);
+  }, [pos, onPositionChange]);
 
   const lastScale       = useRef(DEFAULT_SCALE);
   const lastPos         = useRef({ x: 0, y: 0 });
@@ -332,7 +348,7 @@ export function ClockScreen({
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px)) scale(${scale})`,
+          transform: `translate3d(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px), 0) scale(${scale})`,
           transformOrigin: 'center center',
           transition: isDragging || pinchStartDist.current ? 'none' : 'transform 0.15s ease-out',
           display: 'flex',
@@ -340,6 +356,10 @@ export function ClockScreen({
           zIndex: 2,
           touchAction: 'none',
           cursor: isDragging ? 'grabbing' : 'default',
+          opacity: clockOpacity,
+          willChange: isDragging ? 'transform' : 'auto',
+          backfaceVisibility: 'hidden',
+          perspective: '1000px',
         }}
       >
         {/* 시 타일 */}
