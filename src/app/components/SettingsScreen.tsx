@@ -27,6 +27,8 @@ interface SettingsScreenProps {
 
 // ─── 상수 ─────────────────────────────────────────────────────
 
+const APP_VERSION = 'v0.3.1-20260422-1530';
+
 const DEFAULT_THEMES = [
   { name: '기본',   tileColor: '#0f4c5c', textColor: '#e5e5e5', backgroundColor: '#fb9189', backgroundImage: '' },
   { name: '다크',   tileColor: '#1a1a1a', textColor: '#ffffff', backgroundColor: '#2d2d2d', backgroundImage: '' },
@@ -34,6 +36,15 @@ const DEFAULT_THEMES = [
   { name: '그린',   tileColor: '#065f46', textColor: '#d1fae5', backgroundColor: '#10b981', backgroundImage: '' },
   { name: '퍼플',   tileColor: '#5b21b6', textColor: '#ede9fe', backgroundColor: '#a855f7', backgroundImage: '' },
   { name: '오렌지', tileColor: '#9a3412', textColor: '#fed7aa', backgroundColor: '#f97316', backgroundImage: '' },
+];
+
+const BACKGROUND_IMAGE_THEMES = [
+  { name: '이미지1', tileColor: '#FCABF8', textColor: '#4D0049', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img01.png' },
+  { name: '이미지2', tileColor: '#FCABF8', textColor: '#4D0049', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img02.png' },
+  { name: '이미지3', tileColor: '#1E5A8A', textColor: '#DBEAFE', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img03.png' },
+  { name: '이미지4', tileColor: '#9A3412', textColor: '#FED7AA', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img04.png' },
+  { name: '이미지5', tileColor: '#0F4C5C', textColor: '#E5E5E5', backgroundColor: '#FB9189', backgroundImage: '/background_images/bg_img05.jpg' },
+  { name: '이미지6', tileColor: '#1E5A84', textColor: '#DBEAFE', backgroundColor: '#3B82F6', backgroundImage: '/background_images/bg_img06.jpg' },
 ];
 
 const fonts = [
@@ -331,6 +342,24 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(themes)); } catch {}
   };
 
+  // 배경 이미지 테마 — localStorage에 영구 저장
+  const BG_THEMES_STORAGE_KEY = 'flipclock-bg-image-themes';
+  const [bgImageThemes, setBgImageThemes] = useState<typeof BACKGROUND_IMAGE_THEMES>(() => {
+    try {
+      const saved = localStorage.getItem(BG_THEMES_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [...BACKGROUND_IMAGE_THEMES];
+    } catch { return [...BACKGROUND_IMAGE_THEMES]; }
+  });
+
+  const persistBgImageThemes = (themes: typeof BACKGROUND_IMAGE_THEMES) => {
+    setBgImageThemes(themes);
+    try { localStorage.setItem(BG_THEMES_STORAGE_KEY, JSON.stringify(themes)); } catch {}
+  };
+
+  const deleteBgImageTheme = (idx: number) => {
+    persistBgImageThemes(bgImageThemes.filter((_, i) => i !== idx));
+  };
+
   const update = (patch: Partial<Settings>) => onSettingsChange({ ...settings, ...patch });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -501,6 +530,40 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                   </button>
                 );
               })}
+            </div>
+
+            {/* 배경 이미지 테마 */}
+            <div>
+              <p className="text-[10px] text-gray-400 mb-1.5">배경 이미지 테마</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {bgImageThemes.map((theme, idx) => {
+                  const active = settings.tileColor === theme.tileColor && settings.backgroundColor === theme.backgroundColor && settings.backgroundImage === theme.backgroundImage;
+                  return (
+                    <div key={idx} className="relative">
+                      <button
+                        onClick={() => update({ tileColor: theme.tileColor, textColor: theme.textColor, backgroundColor: theme.backgroundColor, backgroundImage: theme.backgroundImage })}
+                        className="w-full rounded-xl border-2 overflow-hidden transition-all hover:scale-105 active:scale-95"
+                        style={{
+                          backgroundColor: theme.backgroundColor,
+                          backgroundImage: theme.backgroundImage ? `url(${theme.backgroundImage})` : undefined,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          borderColor: active ? theme.tileColor : 'transparent'
+                        }}>
+                        <div className="h-7 flex items-center justify-center text-xs font-bold"
+                          style={{ backgroundColor: theme.tileColor, color: theme.textColor }}>12</div>
+                        <div className="py-0.5 text-[10px] text-center font-medium" style={{ color: theme.tileColor }}>{theme.name}</div>
+                      </button>
+                      {/* 삭제 버튼 */}
+                      <button
+                        onClick={() => deleteBgImageTheme(idx)}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-400 text-white text-[9px] flex items-center justify-center shadow hover:bg-red-500 transition-colors">
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* 사용자 저장 테마 */}
@@ -685,7 +748,12 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
             </div>
           </div>
 
-          <div className="h-2" />
+          <div className="flex-1" />
+
+          {/* 버전 정보 */}
+          <div className="text-right text-[10px] text-gray-400 px-3 py-2 border-t border-gray-100">
+            {APP_VERSION}
+          </div>
         </div>
       </div>
     </div>
