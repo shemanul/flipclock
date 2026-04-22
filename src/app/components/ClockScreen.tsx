@@ -354,13 +354,15 @@ export function ClockScreen({
           display: 'flex',
           gap: '1rem',
           zIndex: 2,
-          touchAction: 'none',
-          cursor: isDragging ? 'grabbing' : 'default',
+          touchAction: 'manipulation',
+          cursor: isDragging ? 'grabbing' : 'grab',
           opacity: clockOpacity,
           willChange: isDragging ? 'transform' : 'auto',
           backfaceVisibility: 'hidden',
           perspective: '1000px',
-        }}
+          WebkitTouchCallout: 'none',
+          WebkitUserDrag: 'none',
+        } as any}
       >
         {/* 시 타일 */}
         <div style={{ width: '45vw', aspectRatio: '1 / 1' }}>
