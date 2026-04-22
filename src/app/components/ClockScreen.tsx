@@ -362,8 +362,8 @@ export function ClockScreen({
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchEnd}
     >
-      {/* 벚꽃 캔버스 */}
-      {cherryBlossom && (
+      {/* 파티클 캔버스 */}
+      {particleOn && (
         <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }} />
       )}
 
