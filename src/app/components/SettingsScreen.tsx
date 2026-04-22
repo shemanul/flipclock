@@ -363,7 +363,7 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
       backgroundColor: settings.backgroundColor,
       backgroundImage: settings.backgroundImage,
     };
-    persistThemes([newTheme, ...userThemes].slice(0, 6));
+    persistThemes([newTheme, ...userThemes].slice(0, 20));
   };
 
   const deleteUserTheme = (idx: number) => {
@@ -411,37 +411,40 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
               backgroundImage: settings.backgroundImage ? `url(${settings.backgroundImage})` : undefined,
               backgroundSize: 'cover', backgroundPosition: 'center', aspectRatio: '2 / 1',
             }}>
-            {/* 시 타일 */}
-            <div className="relative rounded-xl shadow overflow-hidden flex-shrink-0"
-              style={{ aspectRatio: '1/1', height: '78%', backgroundColor: settings.tileColor }}>
-              <div className="absolute top-0 left-0 right-0 text-center pt-1 px-1 truncate"
-                style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
-                {`${year}.${month}.${day}.`}
+            {/* 타일 컨테이너 (투명도 적용) */}
+            <div style={{ display: 'flex', gap: '1.5', alignItems: 'center', justifyContent: 'center', opacity: settings.clockOpacity }}>
+              {/* 시 타일 */}
+              <div className="relative rounded-xl shadow overflow-hidden flex-shrink-0"
+                style={{ aspectRatio: '1/1', height: '78%', backgroundColor: settings.tileColor }}>
+                <div className="absolute top-0 left-0 right-0 text-center pt-1 px-1 truncate"
+                  style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
+                  {`${year}.${month}.${day}.`}
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center"
+                  style={{ color: settings.textColor, fontFamily: settings.fontFamily, fontSize: `${previewMainSize}px`, fontWeight: settings.fontBold ? 700 : 400 }}>
+                  {h}
+                </div>
+                <div className="absolute bottom-0 left-0 px-1 pb-1"
+                  style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
+                  {isPM ? 'PM' : 'AM'}
+                </div>
               </div>
-              <div className="absolute inset-0 flex items-center justify-center"
-                style={{ color: settings.textColor, fontFamily: settings.fontFamily, fontSize: `${previewMainSize}px`, fontWeight: settings.fontBold ? 700 : 400 }}>
-                {h}
-              </div>
-              <div className="absolute bottom-0 left-0 px-1 pb-1"
-                style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
-                {isPM ? 'PM' : 'AM'}
-              </div>
-            </div>
 
-            {/* 분 타일 */}
-            <div className="relative rounded-xl shadow overflow-hidden flex-shrink-0"
-              style={{ aspectRatio: '1/1', height: '78%', backgroundColor: settings.tileColor }}>
-              <div className="absolute top-0 left-0 right-0 text-center pt-1 px-1 truncate"
-                style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
-                {weekday}
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center"
-                style={{ color: settings.textColor, fontFamily: settings.fontFamily, fontSize: `${previewMainSize}px`, fontWeight: settings.fontBold ? 700 : 400 }}>
-                {m}
-              </div>
-              <div className="absolute bottom-0 right-0 px-1 pb-1"
-                style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
-                {sec}
+              {/* 분 타일 */}
+              <div className="relative rounded-xl shadow overflow-hidden flex-shrink-0"
+                style={{ aspectRatio: '1/1', height: '78%', backgroundColor: settings.tileColor }}>
+                <div className="absolute top-0 left-0 right-0 text-center pt-1 px-1 truncate"
+                  style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
+                  {weekday}
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center"
+                  style={{ color: settings.textColor, fontFamily: settings.fontFamily, fontSize: `${previewMainSize}px`, fontWeight: settings.fontBold ? 700 : 400 }}>
+                  {m}
+                </div>
+                <div className="absolute bottom-0 right-0 px-1 pb-1"
+                  style={{ color: settings.textColor, fontFamily: settings.subFontFamily, fontSize: `${previewSubSize}px`, opacity: 0.85 }}>
+                  {sec}
+                </div>
               </div>
             </div>
           </div>
@@ -520,34 +523,36 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
             {userThemes.length > 0 && (
               <div>
                 <p className="text-[10px] text-gray-400 mb-1.5">저장된 테마</p>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {userThemes.map((theme, idx) => {
-                    const active = settings.tileColor === theme.tileColor && settings.backgroundColor === theme.backgroundColor;
-                    return (
-                      <div key={idx} className="relative">
-                        <button
-                          onClick={() => update({ tileColor: theme.tileColor, textColor: theme.textColor, backgroundColor: theme.backgroundColor, backgroundImage: theme.backgroundImage })}
-                          className="w-full rounded-xl border-2 overflow-hidden transition-all hover:scale-105 active:scale-95"
-                          style={{
-                            backgroundColor: theme.backgroundColor,
-                            backgroundImage: theme.backgroundImage ? `url(${theme.backgroundImage})` : undefined,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            borderColor: active ? theme.tileColor : 'transparent'
-                          }}>
-                          <div className="h-7 flex items-center justify-center text-xs font-bold"
-                            style={{ backgroundColor: theme.tileColor, color: theme.textColor }}>12</div>
-                          <div className="py-0.5 text-[10px] text-center font-medium" style={{ color: theme.tileColor }}>{theme.name}</div>
-                        </button>
-                        {/* 삭제 버튼 */}
-                        <button
-                          onClick={() => deleteUserTheme(idx)}
-                          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-400 text-white text-[9px] flex items-center justify-center shadow hover:bg-red-500 transition-colors">
-                          ×
-                        </button>
-                      </div>
-                    );
-                  })}
+                <div className="overflow-y-auto max-h-40 pr-1">
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {userThemes.map((theme, idx) => {
+                      const active = settings.tileColor === theme.tileColor && settings.backgroundColor === theme.backgroundColor;
+                      return (
+                        <div key={idx} className="relative">
+                          <button
+                            onClick={() => update({ tileColor: theme.tileColor, textColor: theme.textColor, backgroundColor: theme.backgroundColor, backgroundImage: theme.backgroundImage })}
+                            className="w-full rounded-xl border-2 overflow-hidden transition-all hover:scale-105 active:scale-95"
+                            style={{
+                              backgroundColor: theme.backgroundColor,
+                              backgroundImage: theme.backgroundImage ? `url(${theme.backgroundImage})` : undefined,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                              borderColor: active ? theme.tileColor : 'transparent'
+                            }}>
+                            <div className="h-7 flex items-center justify-center text-xs font-bold"
+                              style={{ backgroundColor: theme.tileColor, color: theme.textColor }}>12</div>
+                            <div className="py-0.5 text-[10px] text-center font-medium" style={{ color: theme.tileColor }}>{theme.name}</div>
+                          </button>
+                          {/* 삭제 버튼 */}
+                          <button
+                            onClick={() => deleteUserTheme(idx)}
+                            className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-400 text-white text-[9px] flex items-center justify-center shadow hover:bg-red-500 transition-colors">
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
