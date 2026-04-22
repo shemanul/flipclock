@@ -133,6 +133,26 @@ export function ClockScreen({
       ctx.closePath();
     };
 
+    const drawSnowflake = (ctx: CanvasRenderingContext2D, size: number) => {
+      const s = size * 0.4;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI) / 3;
+        const x = Math.cos(angle) * s;
+        const y = Math.sin(angle) * s;
+        ctx.moveTo(0, 0);
+        ctx.lineTo(x, y);
+        const bx = Math.cos(angle) * s * 0.6;
+        const by = Math.sin(angle) * s * 0.6;
+        const side1 = (angle + Math.PI / 6) * 0.5;
+        ctx.moveTo(bx + Math.cos(side1) * s * 0.3, by + Math.sin(side1) * s * 0.3);
+        ctx.lineTo(x, y);
+        const side2 = (angle - Math.PI / 6) * 0.5;
+        ctx.moveTo(bx + Math.cos(side2) * s * 0.3, by + Math.sin(side2) * s * 0.3);
+        ctx.lineTo(x, y);
+      }
+    };
+
     let t = 0;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -151,7 +171,8 @@ export function ClockScreen({
         ctx.fillStyle = p.color;
         ctx.shadowColor = 'rgba(220,100,140,0.4)';
         ctx.shadowBlur = 5;
-        if (p.type === 'heart') drawHeart(ctx, p.size);
+        if (particleType === 'snow') drawSnowflake(ctx, p.size);
+        else if (particleType === 'cherry' && p.type === 'heart') drawHeart(ctx, p.size);
         else drawOval(ctx, p.size);
         ctx.fill();
         ctx.restore();
