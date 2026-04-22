@@ -16,7 +16,8 @@ export interface Settings {
   screenSaver: boolean;
   particleRefresh: boolean;
   keepScreenOn: boolean;
-  cherryBlossom: boolean;
+  particleType: 'cherry' | 'leaf' | 'autumn' | 'rain' | 'snow' | null;
+  particleOn: boolean;
   clockOpacity: number;
   clockPosition: { x: number; y: number };
 }
@@ -29,7 +30,7 @@ interface SettingsScreenProps {
 
 // ─── 상수 ─────────────────────────────────────────────────────
 
-const APP_VERSION = 'v0.5.2-20260422-1830';
+const APP_VERSION = 'v0.6.0-20260422-1930';
 
 const DEFAULT_THEMES = [
   { name: '기본',   tileColor: '#0f4c5c', textColor: '#e5e5e5', backgroundColor: '#fb9189', backgroundImage: '' },
@@ -650,6 +651,39 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                 />
                 <span className="text-[10px] font-mono text-gray-400 w-8 text-right">{Math.round(settings.clockOpacity * 100)}%</span>
               </div>
+            </div>
+
+            {/* 입자 효과 선택 */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] text-gray-500">입자 효과</span>
+                <Toggle checked={settings.particleOn} onChange={() => update({ particleOn: !settings.particleOn })} accentColor="#3b82f6" />
+              </div>
+              {settings.particleOn && (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { value: 'cherry', label: '🌸 벚꽃', color: '#ffc0cb' },
+                    { value: 'leaf', label: '🌿 초록잎', color: '#90ee90' },
+                    { value: 'autumn', label: '🍂 낙엽', color: '#ff8c00' },
+                    { value: 'snow', label: '❄️ 눈꽃', color: '#e0f7ff' },
+                  ].map(({ value, label, color }) => (
+                    <button
+                      key={value}
+                      onClick={() => update({ particleType: value as any })}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all ${
+                        settings.particleType === value
+                          ? 'bg-blue-500 text-white border-2 border-blue-600'
+                          : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+                      }`}
+                      style={{
+                        backgroundColor: settings.particleType === value ? '#3b82f6' : color + '20',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 화면 보호 */}

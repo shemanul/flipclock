@@ -17,7 +17,8 @@ const DEFAULT_SETTINGS: Settings = {
   screenSaver: false,
   particleRefresh: false,
   keepScreenOn: false,
-  cherryBlossom: false,
+  particleType: null,
+  particleOn: false,
   clockOpacity: 1,
   clockPosition: { x: 0, y: 0 },
 };
@@ -204,7 +205,8 @@ export default function App() {
                   subFontFamily={settings.subFontFamily}
                   showAmPm={showAmPm}
                   showSeconds={showSeconds}
-                  cherryBlossom={settings.cherryBlossom}
+                  particleType={settings.particleType}
+                  particleOn={settings.particleOn}
                   clockOpacity={settings.clockOpacity}
                   clockPosition={settings.clockPosition}
                   onPositionChange={(pos) => setSettings(s => ({ ...s, clockPosition: pos }))}

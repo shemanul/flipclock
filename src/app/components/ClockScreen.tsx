@@ -12,7 +12,8 @@ interface ClockScreenProps {
   subFontFamily: string;
   showAmPm: boolean;
   showSeconds: boolean;
-  cherryBlossom: boolean;
+  particleType: 'cherry' | 'leaf' | 'autumn' | 'rain' | 'snow' | null;
+  particleOn: boolean;
   clockOpacity: number;
   clockPosition: { x: number; y: number };
   onPositionChange: (pos: { x: number; y: number }) => void;
@@ -26,7 +27,8 @@ interface ClockScreenProps {
 export function ClockScreen({
   tileColor, textColor, backgroundColor, backgroundImage,
   fontFamily, fontBold = true, subFontSize, subFontFamily,
-  showAmPm, showSeconds, cherryBlossom,
+  showAmPm, showSeconds,
+  particleType, particleOn,
   clockOpacity, clockPosition, onPositionChange,
   onToggleAmPm, onToggleSeconds,
   onSwipeLeft, onSwipeUp, onSwipeDown,
@@ -59,7 +61,7 @@ export function ClockScreen({
 
   useEffect(() => {
     cancelAnimationFrame(animRef.current);
-    if (!cherryBlossom) return;
+    if (!particleOn || !particleType) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -69,10 +71,31 @@ export function ClockScreen({
     resize();
     window.addEventListener('resize', resize);
 
-    const colors = [
-      'rgba(255,182,193,0.9)', 'rgba(255,150,170,0.85)',
-      'rgba(255,200,215,0.8)', 'rgba(250,205,220,0.75)', 'rgba(255,235,240,0.85)',
-    ];
+    // 입자 타입에 따른 색상 설정
+    let colors: string[] = [];
+    if (particleType === 'cherry') {
+      colors = [
+        'rgba(255,182,193,0.9)', 'rgba(255,150,170,0.85)',
+        'rgba(255,200,215,0.8)', 'rgba(250,205,220,0.75)', 'rgba(255,235,240,0.85)',
+      ];
+    } else if (particleType === 'leaf') {
+      colors = [
+        'rgba(144,238,144,0.9)', 'rgba(152,251,152,0.85)',
+        'rgba(173,255,47,0.8)', 'rgba(144,238,144,0.75)', 'rgba(152,251,152,0.85)',
+      ];
+    } else if (particleType === 'autumn') {
+      colors = [
+        'rgba(255,140,0,0.9)', 'rgba(255,165,0,0.85)',
+        'rgba(220,20,60,0.8)', 'rgba(255,69,0,0.75)', 'rgba(178,34,34,0.85)',
+      ];
+    } else if (particleType === 'snow') {
+      colors = [
+        'rgba(255,255,255,0.95)', 'rgba(240,248,255,0.9)',
+        'rgba(255,255,255,0.85)', 'rgba(245,245,255,0.9)', 'rgba(255,255,255,0.95)',
+      ];
+    } else if (particleType === 'rain') {
+      colors = ['rgba(100,150,200,0.6)', 'rgba(120,170,220,0.6)'];
+    }
 
     type Petal = {
       x: number; y: number; vx: number; vy: number; size: number;
@@ -137,7 +160,7 @@ export function ClockScreen({
     };
     animate();
     return () => { cancelAnimationFrame(animRef.current); window.removeEventListener('resize', resize); };
-  }, [cherryBlossom]);
+  }, [particleOn, particleType]);
 
   // ── 상태 ─────────────────────────────────────────────────────
   const DEFAULT_SCALE  = 0.5;
