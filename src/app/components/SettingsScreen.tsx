@@ -1,5 +1,5 @@
 import { X, Upload, Trash2, Monitor, Zap, Sun, ChevronUp, ChevronDown, Save } from 'lucide-react';
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState } from 'react';
 
 // ─── 타입 ─────────────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ interface SettingsScreenProps {
 
 // ─── 상수 ─────────────────────────────────────────────────────
 
-const APP_VERSION = 'v0.3.1-20260422-1530';
+const APP_VERSION = 'v0.4.0-20260422-1600';
 
 const DEFAULT_THEMES = [
   { name: '기본',   tileColor: '#0f4c5c', textColor: '#e5e5e5', backgroundColor: '#fb9189', backgroundImage: '' },
@@ -328,36 +328,18 @@ function ColorRow({ label, color, onChange }: {
 export function SettingsScreen({ onClose, settings, onSettingsChange }: SettingsScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 사용자 저장 테마 — localStorage에 영구 저장
+  // 사용자 저장 테마 & 배경 이미지 테마 — localStorage에 영구 저장
   const STORAGE_KEY = 'flipclock-user-themes';
   const [userThemes, setUserThemes] = useState<typeof DEFAULT_THEMES>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+      return saved ? JSON.parse(saved) : [...BACKGROUND_IMAGE_THEMES];
+    } catch { return [...BACKGROUND_IMAGE_THEMES]; }
   });
 
   const persistThemes = (themes: typeof DEFAULT_THEMES) => {
     setUserThemes(themes);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(themes)); } catch {}
-  };
-
-  // 배경 이미지 테마 — localStorage에 영구 저장
-  const BG_THEMES_STORAGE_KEY = 'flipclock-bg-image-themes';
-  const [bgImageThemes, setBgImageThemes] = useState<typeof BACKGROUND_IMAGE_THEMES>(() => {
-    try {
-      const saved = localStorage.getItem(BG_THEMES_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [...BACKGROUND_IMAGE_THEMES];
-    } catch { return [...BACKGROUND_IMAGE_THEMES]; }
-  });
-
-  const persistBgImageThemes = (themes: typeof BACKGROUND_IMAGE_THEMES) => {
-    setBgImageThemes(themes);
-    try { localStorage.setItem(BG_THEMES_STORAGE_KEY, JSON.stringify(themes)); } catch {}
-  };
-
-  const deleteBgImageTheme = (idx: number) => {
-    persistBgImageThemes(bgImageThemes.filter((_, i) => i !== idx));
   };
 
   const update = (patch: Partial<Settings>) => onSettingsChange({ ...settings, ...patch });
@@ -532,41 +514,7 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
               })}
             </div>
 
-            {/* 배경 이미지 테마 */}
-            <div>
-              <p className="text-[10px] text-gray-400 mb-1.5">배경 이미지 테마</p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {bgImageThemes.map((theme, idx) => {
-                  const active = settings.tileColor === theme.tileColor && settings.backgroundColor === theme.backgroundColor && settings.backgroundImage === theme.backgroundImage;
-                  return (
-                    <div key={idx} className="relative">
-                      <button
-                        onClick={() => update({ tileColor: theme.tileColor, textColor: theme.textColor, backgroundColor: theme.backgroundColor, backgroundImage: theme.backgroundImage })}
-                        className="w-full rounded-xl border-2 overflow-hidden transition-all hover:scale-105 active:scale-95"
-                        style={{
-                          backgroundColor: theme.backgroundColor,
-                          backgroundImage: theme.backgroundImage ? `url(${theme.backgroundImage})` : undefined,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                          borderColor: active ? theme.tileColor : 'transparent'
-                        }}>
-                        <div className="h-7 flex items-center justify-center text-xs font-bold"
-                          style={{ backgroundColor: theme.tileColor, color: theme.textColor }}>12</div>
-                        <div className="py-0.5 text-[10px] text-center font-medium" style={{ color: theme.tileColor }}>{theme.name}</div>
-                      </button>
-                      {/* 삭제 버튼 */}
-                      <button
-                        onClick={() => deleteBgImageTheme(idx)}
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-400 text-white text-[9px] flex items-center justify-center shadow hover:bg-red-500 transition-colors">
-                        ×
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 사용자 저장 테마 */}
+            {/* 저장된 테마 */}
             {userThemes.length > 0 && (
               <div>
                 <p className="text-[10px] text-gray-400 mb-1.5">저장된 테마</p>
