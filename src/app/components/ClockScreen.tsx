@@ -223,10 +223,13 @@ export function ClockScreen({
     }
   }, []);
 
+  const rafRef = useRef<number | null>(null);
+
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     // 두 손가락 → 핀치줌
     if (e.touches.length === 2 && pinchStartDist.current !== null) {
       if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       const dist  = getDistance(e.touches);
       const ratio = dist / pinchStartDist.current;
       const next  = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pinchStartScale.current * ratio));
@@ -242,12 +245,15 @@ export function ClockScreen({
 
       // 길게 누르기 중 → 드래그 이동
       if (isLongPressed.current) {
-        const newPos = {
-          x: dragStartPos.current.x + dx,
-          y: dragStartPos.current.y + dy,
-        };
-        lastPos.current = newPos;
-        setPos(newPos);
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => {
+          const newPos = {
+            x: dragStartPos.current.x + dx,
+            y: dragStartPos.current.y + dy,
+          };
+          lastPos.current = newPos;
+          setPos(newPos);
+        });
         return;
       }
 
@@ -260,6 +266,7 @@ export function ClockScreen({
 
   const onTouchEnd = useCallback((e: React.TouchEvent) => {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     // 핀치 종료
     if (e.touches.length < 2) {

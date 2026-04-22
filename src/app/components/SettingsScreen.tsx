@@ -29,7 +29,7 @@ interface SettingsScreenProps {
 
 // ─── 상수 ─────────────────────────────────────────────────────
 
-const APP_VERSION = 'v0.5.1-20260422-1800';
+const APP_VERSION = 'v0.5.2-20260422-1830';
 
 const DEFAULT_THEMES = [
   { name: '기본',   tileColor: '#0f4c5c', textColor: '#e5e5e5', backgroundColor: '#fb9189', backgroundImage: '' },
