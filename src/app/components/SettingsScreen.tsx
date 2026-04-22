@@ -28,12 +28,12 @@ interface SettingsScreenProps {
 // ─── 상수 ─────────────────────────────────────────────────────
 
 const DEFAULT_THEMES = [
-  { name: '기본',   tileColor: '#0f4c5c', textColor: '#e5e5e5', backgroundColor: '#fb9189' },
-  { name: '다크',   tileColor: '#1a1a1a', textColor: '#ffffff', backgroundColor: '#2d2d2d' },
-  { name: '블루',   tileColor: '#1e3a8a', textColor: '#dbeafe', backgroundColor: '#3b82f6' },
-  { name: '그린',   tileColor: '#065f46', textColor: '#d1fae5', backgroundColor: '#10b981' },
-  { name: '퍼플',   tileColor: '#5b21b6', textColor: '#ede9fe', backgroundColor: '#a855f7' },
-  { name: '오렌지', tileColor: '#9a3412', textColor: '#fed7aa', backgroundColor: '#f97316' },
+  { name: '기본',   tileColor: '#0f4c5c', textColor: '#e5e5e5', backgroundColor: '#fb9189', backgroundImage: '' },
+  { name: '다크',   tileColor: '#1a1a1a', textColor: '#ffffff', backgroundColor: '#2d2d2d', backgroundImage: '' },
+  { name: '블루',   tileColor: '#1e3a8a', textColor: '#dbeafe', backgroundColor: '#3b82f6', backgroundImage: '' },
+  { name: '그린',   tileColor: '#065f46', textColor: '#d1fae5', backgroundColor: '#10b981', backgroundImage: '' },
+  { name: '퍼플',   tileColor: '#5b21b6', textColor: '#ede9fe', backgroundColor: '#a855f7', backgroundImage: '' },
+  { name: '오렌지', tileColor: '#9a3412', textColor: '#fed7aa', backgroundColor: '#f97316', backgroundImage: '' },
 ];
 
 const fonts = [
@@ -348,6 +348,7 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
       tileColor: settings.tileColor,
       textColor: settings.textColor,
       backgroundColor: settings.backgroundColor,
+      backgroundImage: settings.backgroundImage,
     };
     persistThemes([newTheme, ...userThemes].slice(0, 6));
   };
@@ -485,9 +486,15 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                 const active = settings.tileColor === theme.tileColor && settings.backgroundColor === theme.backgroundColor;
                 return (
                   <button key={theme.name}
-                    onClick={() => update({ tileColor: theme.tileColor, textColor: theme.textColor, backgroundColor: theme.backgroundColor })}
+                    onClick={() => update({ tileColor: theme.tileColor, textColor: theme.textColor, backgroundColor: theme.backgroundColor, backgroundImage: theme.backgroundImage })}
                     className="rounded-xl border-2 overflow-hidden transition-all hover:scale-105 active:scale-95"
-                    style={{ backgroundColor: theme.backgroundColor, borderColor: active ? theme.tileColor : 'transparent' }}>
+                    style={{
+                      backgroundColor: theme.backgroundColor,
+                      backgroundImage: theme.backgroundImage ? `url(${theme.backgroundImage})` : undefined,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      borderColor: active ? theme.tileColor : 'transparent'
+                    }}>
                     <div className="h-7 flex items-center justify-center text-xs font-bold"
                       style={{ backgroundColor: theme.tileColor, color: theme.textColor }}>12</div>
                     <div className="py-0.5 text-[10px] text-center font-medium" style={{ color: theme.tileColor }}>{theme.name}</div>
@@ -506,9 +513,15 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
                     return (
                       <div key={idx} className="relative">
                         <button
-                          onClick={() => update({ tileColor: theme.tileColor, textColor: theme.textColor, backgroundColor: theme.backgroundColor })}
+                          onClick={() => update({ tileColor: theme.tileColor, textColor: theme.textColor, backgroundColor: theme.backgroundColor, backgroundImage: theme.backgroundImage })}
                           className="w-full rounded-xl border-2 overflow-hidden transition-all hover:scale-105 active:scale-95"
-                          style={{ backgroundColor: theme.backgroundColor, borderColor: active ? theme.tileColor : 'transparent' }}>
+                          style={{
+                            backgroundColor: theme.backgroundColor,
+                            backgroundImage: theme.backgroundImage ? `url(${theme.backgroundImage})` : undefined,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            borderColor: active ? theme.tileColor : 'transparent'
+                          }}>
                           <div className="h-7 flex items-center justify-center text-xs font-bold"
                             style={{ backgroundColor: theme.tileColor, color: theme.textColor }}>12</div>
                           <div className="py-0.5 text-[10px] text-center font-medium" style={{ color: theme.tileColor }}>{theme.name}</div>
