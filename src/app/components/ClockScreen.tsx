@@ -143,9 +143,9 @@ export function ClockScreen({
   const DEFAULT_SCALE  = 0.5;
   const MIN_SCALE      = 0.3;
   const MAX_SCALE      = 2.5;
-  const LONG_PRESS_MS  = 400;
+  const LONG_PRESS_MS  = 150;
   const SWIPE_MIN      = 60;   // 스와이프 최소 거리
-  const MOVE_CANCEL    = 15;   // 길게 누르기 취소 거리
+  const MOVE_CANCEL    = 8;    // 길게 누르기 취소 거리
 
   const [scale, setScale]           = useState(DEFAULT_SCALE);
   const [pos, setPos]               = useState(clockPosition);
@@ -228,6 +228,7 @@ export function ClockScreen({
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     // 두 손가락 → 핀치줌
     if (e.touches.length === 2 && pinchStartDist.current !== null) {
+      e.preventDefault();
       if (longPressTimer.current) clearTimeout(longPressTimer.current);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       const dist  = getDistance(e.touches);
@@ -245,6 +246,7 @@ export function ClockScreen({
 
       // 길게 누르기 중 → 드래그 이동
       if (isLongPressed.current) {
+        e.preventDefault();
         if (rafRef.current) cancelAnimationFrame(rafRef.current);
         rafRef.current = requestAnimationFrame(() => {
           const newPos = {
@@ -328,7 +330,10 @@ export function ClockScreen({
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         touchAction: 'none',
-      }}
+        contain: 'layout style paint',
+        WebkitFontSmoothing: 'antialiased',
+        WebkitBackfaceVisibility: 'hidden',
+      } as any}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
