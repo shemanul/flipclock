@@ -412,7 +412,7 @@ export function SettingsScreen({ onClose, settings, onSettingsChange }: Settings
               backgroundSize: 'cover', backgroundPosition: 'center', aspectRatio: '2 / 1',
             }}>
             {/* 타일 컨테이너 (투명도 적용) */}
-            <div style={{ display: 'flex', gap: '1.5', alignItems: 'center', justifyContent: 'center', opacity: settings.clockOpacity }}>
+            <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', justifyContent: 'center', opacity: settings.clockOpacity }}>
               {/* 시 타일 */}
               <div className="relative rounded-xl shadow overflow-hidden flex-shrink-0"
                 style={{ aspectRatio: '1/1', height: '78%', backgroundColor: settings.tileColor }}>
